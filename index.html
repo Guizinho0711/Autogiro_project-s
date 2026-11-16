@@ -3,9 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="AutoGiro: encontre seminovos, simule o financiamento e acompanhe suas operações." />
-    <meta name="theme-color" content="#0c0a14" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="AutoGiro: escolha o veículo, simule a parcela com a taxa do seu perfil de crédito e acompanhe o financiamento." />
+    <meta name="theme-color" content="#121314" />
+    <meta name="color-scheme" content="dark light" />
+    <script>
+      // Aplica o tema escolhido antes de desenhar a página, para não piscar.
+      try { var t = localStorage.getItem("autogiro:tema"); if (t === "claro" || t === "escuro") document.documentElement.setAttribute("data-theme", t); } catch (e) {}
+    </script>
     <link rel="preconnect" href="https://credcasa-esteira-credito.onrender.com" crossorigin />
     <title>AutoGiro | Financiamento de veículos</title>
   </head>

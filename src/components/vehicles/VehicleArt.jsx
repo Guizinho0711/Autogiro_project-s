@@ -12,7 +12,7 @@ const WINDOWS = {
   picape: "M102 66 Q110 52 124 48 L170 48 Q180 50 184 64 Z",
 };
 
-export function VehicleArt({ category, color = "#6d28d9", label }) {
+export function VehicleArt({ category, color = "#6b6d72", label }) {
   const decorative = !label;
   if (category === "moto") {
     return (

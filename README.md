@@ -25,6 +25,7 @@ Na versão publicada, o catálogo de veículos vem do banco de dados (Supabase) 
 - Página `#/admin`, com login do Supabase. Só contas da tabela `administradores` conseguem cadastrar; quem tenta sem permissão é barrado pelo próprio banco (RLS).
 - Cadastro, edição e exclusão de veículos, com envio de foto (reduzida no navegador e guardada no Supabase Storage), cor, opcionais e descrição.
 - Situação de cada veículo: disponível, reservado, vendido ou oculto. Vendido e oculto saem da vitrine, mas continuam no banco.
+- Painel com o resumo do estoque: veículos na vitrine, reservados, vendidos, ocultos, valor total e preço médio, gráfico por categoria e últimos cadastrados. A lista filtra por situação.
 
 **Como liberar um administrador:** crie a conta em `#/admin`, confirme o e-mail e entre. A página mostra um comando `insert into public.administradores ...` com o seu ID. Rode esse comando no SQL Editor do Supabase e recarregue.
 
@@ -42,7 +43,10 @@ Na versão publicada, o catálogo de veículos vem do banco de dados (Supabase) 
 
 ### Qualidade da interface
 - Estados de carregamento (skeletons), erro (com "Tentar de novo") e lista vazia em todas as telas.
-- Responsivo, com modo claro e escuro automático, navegação por teclado e rótulos de acessibilidade.
+- Visual monocromático (grafite e branco), fonte IBM Plex Sans embutida e tema claro, escuro ou automático, com botão de troca.
+- Simulador rápido na página inicial: arraste valor, entrada e prazo e a parcela muda na hora.
+- Transições suaves entre telas (View Transitions), diálogos animados e seções que entram com a rolagem; tudo desligado quando o sistema pede menos movimento.
+- Responsivo de 320 px a telas grandes, navegação por teclado e regras de acessibilidade WCAG 2.1 AA conferidas automaticamente (axe), nos dois temas.
 - Reenvio seguro de pagamentos: cada tentativa leva um identificador próprio para evitar duplicidade.
 
 ### Banco de dados
@@ -118,7 +122,7 @@ Abra `http://localhost:5173`. Com o `.env` padrão, tudo funciona com dados simu
 
 1. Na pasta do [Score-Engine](https://github.com/viniciusgm25/Score-Engine), crie o `.env` a partir do `.env.exemplo` e preencha a senha do PostgreSQL.
 2. Se a Decisão (porta 8081) não estiver rodando, coloque `DECISION_ENABLED=false` nesse `.env`. Sem isso, o Score responde erro ao tentar avisar a Decisão.
-3. Rode `mvn spring-boot:run` na raiz do Score. Ele sobe na porta 8080 e já libera chamadas de `localhost`.
+3. Rode `mvn spring-boot:run` na raiz do Score. Para o site publicado também poder chamar o Score (quando ele estiver hospedado com https), coloque no `.env` do Score: `CORS_ALLOWED_ORIGINS=https://autogiroproject-s.vercel.app`. Ele sobe na porta 8080 e já libera chamadas de `localhost`.
 4. No `.env` do AutoGiro, troque `VITE_MOCK_SCORE` para `false` e reinicie o `npm run dev`.
 
 ### Variáveis de ambiente
@@ -152,6 +156,8 @@ Referência completa dos campos, tipos e regras: [`docs/API.md`](docs/API.md).
 O contrato do nosso back-end está em [`docs/autogiro-api.openapi.yaml`](docs/autogiro-api.openapi.yaml) (OpenAPI 3.0). Ele cobre catálogo, simulação, política de crédito, cliente, propostas, análise de crédito e contratação, e já está alinhado ao Score Engine e ao serviço de juros. Só a Decisão continua pendente, até o contrato dela chegar.
 
 **[Abrir o contrato interativo (Swagger)](https://autogiroproject-s.vercel.app/contrato/)** · [Baixar o YAML](docs/autogiro-api.openapi.yaml)
+
+O YAML publicado tem CORS liberado, então outros grupos podem abrir o contrato direto em ferramentas como o [editor.swagger.io](https://editor.swagger.io) (File → Import URL → `https://autogiroproject-s.vercel.app/contrato/autogiro-api.openapi.yaml`) ou no Postman.
 
 **Esteira de crédito para veículos (CredCasa):** proposta de contrato e JSONs reais de requisição e resposta em [`docs/esteira-veiculos/`](docs/esteira-veiculos/README.md).
 

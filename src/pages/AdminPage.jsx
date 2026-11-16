@@ -225,19 +225,63 @@ function Formulario({ inicial, onSalvo, onCancelar }) {
   );
 }
 
+/** Resumo do estoque: o que está na vitrine, quanto vale e como se divide. */
+function Painel({ itens }) {
+  const vitrine = itens.filter((v) => v.status === "available" || v.status === "reserved");
+  const conta = (s) => itens.filter((v) => v.status === s).length;
+  const valor = vitrine.reduce((t, v) => t + v.priceBRL, 0);
+  const porCategoria = Object.entries(CATEGORY_LABELS).map(([c, l]) => [l, vitrine.filter((v) => v.category === c).length]);
+  const maior = Math.max(1, ...porCategoria.map(([, n]) => n));
+  const recentes = [...itens].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))).slice(0, 5);
+  return (
+    <section aria-labelledby="painel-t">
+      <h2 id="painel-t" className="sr-only">Resumo do estoque</h2>
+      <div className="kpis">
+        <div className="kpi"><span>Na vitrine</span><strong>{vitrine.length}</strong></div>
+        <div className="kpi"><span>Reservados</span><strong>{conta("reserved")}</strong></div>
+        <div className="kpi"><span>Vendidos</span><strong>{conta("sold")}</strong></div>
+        <div className="kpi"><span>Ocultos</span><strong>{conta("hidden")}</strong></div>
+        <div className="kpi"><span>Valor da vitrine</span><strong>{formatBRL(valor)}</strong></div>
+        <div className="kpi"><span>Preço médio</span><strong>{vitrine.length ? formatBRL(valor / vitrine.length) : "—"}</strong></div>
+      </div>
+      <div className="dash">
+        <div className="panel">
+          <h3 className="h2 h2--flush">Vitrine por categoria</h3>
+          <ul className="hbars" aria-label="Veículos na vitrine por categoria">
+            {porCategoria.map(([l, n]) => (
+              <li key={l} className="hbar"><span>{l}</span><span className="hbar__track" aria-hidden="true"><span style={{ width: `${(n / maior) * 100}%` }} /></span><output>{n}</output></li>
+            ))}
+          </ul>
+        </div>
+        <div className="panel">
+          <h3 className="h2 h2--flush">Cadastrados por último</h3>
+          <ul className="recent">
+            {recentes.map((v) => <li key={v.id}><span>{v.brand} {v.model} {v.year}</span><span className="muted">{STATUS[v.status]}</span></li>)}
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Lista({ itens, onEditar, onMudou, aviso }) {
   const [confirmar, setConfirmar] = useState(null);
   const [erro, setErro] = useState("");
   const [busca, setBusca] = useState("");
+  const [situacao, setSituacao] = useState("");
   const q = busca.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-  const filtrados = itens.filter((v) => !q || `${v.brand} ${v.model} ${v.version}`.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().includes(q));
+  const filtrados = itens.filter((v) => (!situacao || v.status === situacao)).filter((v) => !q || `${v.brand} ${v.model} ${v.version}`.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().includes(q));
   const status = async (v, s) => { setErro(""); try { await adminService.mudarStatus(v.id, STATUS_BANCO[s]); onMudou(); } catch (e) { setErro(e.message); } };
   const excluir = async (v) => { setErro(""); try { await adminService.excluir(v); setConfirmar(null); onMudou(); } catch (e) { setErro(e.message); setConfirmar(null); } };
   return (
     <section className="panel" aria-labelledby="lst-t">
       <div className="credit-form__head">
         <h2 id="lst-t" className="h2 h2--flush">Estoque ({itens.length})</h2>
-        <div className="field admin-search"><label htmlFor="adm-q" className="sr-only">Buscar no estoque</label><input id="adm-q" type="search" placeholder="Buscar" value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
+        <div className="admin-tools">
+          <label htmlFor="adm-st" className="sr-only">Filtrar por situação</label>
+          <select id="adm-st" value={situacao} onChange={(e) => setSituacao(e.target.value)}><option value="">Todas as situações</option>{Object.entries(STATUS).map(([s, l]) => <option key={s} value={s}>{l}</option>)}</select>
+          <div className="field admin-search"><label htmlFor="adm-q" className="sr-only">Buscar no estoque</label><input id="adm-q" type="search" placeholder="Buscar marca ou modelo" value={busca} onChange={(e) => setBusca(e.target.value)} /></div>
+        </div>
       </div>
       <p className="form-ok" role="status">{aviso}</p>
       <p className="form-error" role="alert">{erro}</p>
@@ -261,7 +305,7 @@ function Lista({ itens, onEditar, onMudou, aviso }) {
           </li>
         ))}
       </ul>
-      {filtrados.length === 0 && <p className="muted">Nenhum veículo {busca ? "com essa busca" : "cadastrado ainda"}.</p>}
+      {filtrados.length === 0 && <p className="muted">{itens.length ? "Nenhum veículo com esses filtros." : "Nenhum veículo cadastrado ainda. Use o formulário acima para cadastrar o primeiro."}</p>}
     </section>
   );
 }
@@ -296,7 +340,7 @@ export default function AdminPage() {
     <main className="container">
       <section className="intro">
         <h1>Área do lojista</h1>
-        <p>Cadastre, edite e tire veículos da vitrine. As mudanças aparecem no site em até 1 minuto.</p>
+        <p>Acompanhe o estoque e cadastre, edite ou tire veículos da vitrine. As mudanças aparecem no site em até 1 minuto.</p>
         {sessao && <p className="session">Conectado como <strong>{sessao.user.email}</strong> <button type="button" className="link-btn" onClick={() => adminService.sair()}>Sair</button></p>}
       </section>
       {falha && <p className="alert alert--bad" role="alert">{falha}</p>}
@@ -306,6 +350,7 @@ export default function AdminPage() {
       {sessao && admin === false && <SemPermissao sessao={sessao} />}
       {admin && (
         <>
+          {itens && <Painel itens={itens} />}
           <Formulario
             inicial={inicial}
             onCancelar={() => setEditando(VAZIO)}

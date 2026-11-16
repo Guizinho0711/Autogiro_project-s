@@ -11,6 +11,7 @@ import { SimularFinanciamentoDialog } from "../components/vehicles/SimularFinanc
 import { VehicleCard } from "../components/vehicles/VehicleCard.jsx";
 import { CompareBar } from "../components/vehicles/CompareBar.jsx";
 import { ComoFunciona, TaxasPorPerfil, Faq } from "../components/vehicles/HomeSections.jsx";
+import { QuickSim, FaixaConfianca } from "../components/vehicles/QuickSim.jsx";
 import { VehicleCardSkeleton } from "../components/ui/Skeleton.jsx";
 import { StateMessage } from "../components/ui/StateMessage.jsx";
 
@@ -33,6 +34,14 @@ export default function VeiculosPage() {
     [search, filters.category, filters.maxPrice]
   );
 
+  const irParaEstoque = () => document.getElementById("estoque")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // Do simulador da chamada para a lista: aplica o menor teto de preço que cobre o valor escolhido.
+  const verAte = (valor) => {
+    const teto = [30000, 60000, 100000, 150000, 250000].find((p) => p >= valor);
+    setFilters((f) => ({ ...f, maxPrice: teto ? String(teto) : "" }));
+    irParaEstoque();
+  };
+
   const itens = useMemo(() => {
     if (!data) return [];
     const base = filters.onlyFav ? data.items.filter((v) => fav.has(v.id)) : data.items;
@@ -43,16 +52,19 @@ export default function VeiculosPage() {
   return (
     <main className="container">
       <section className="hero" aria-labelledby="titulo">
-        <p className="eyebrow">Financiamento de veículos</p>
-        <h1 id="titulo">Seu próximo carro, com a parcela clara desde o começo</h1>
-        <p className="hero__lead">Escolha entre carros, picapes e motos, compare e simule com a taxa do seu perfil de crédito antes de falar com a gente.</p>
-        <ul className="hero__facts">
-          <li><strong>12 a 60</strong> meses de prazo</li>
-          <li><strong>PRICE</strong> ou <strong>SAC</strong></li>
-          <li><strong>{politica ? `${taxaDaFaixa(politica, "A").toLocaleString("pt-BR", { minimumFractionDigits: 2 })}%` : "—"}</strong> ao mês, a partir de</li>
-        </ul>
+        <div>
+          <h1 id="titulo">Financie seu próximo veículo sabendo a parcela antes de assinar</h1>
+          <p className="hero__lead">Escolha entre carros, picapes e motos, simule com a taxa do seu perfil de crédito e acompanhe cada parcela depois de contratar.</p>
+          <div className="hero__cta">
+            <button type="button" className="btn" onClick={() => irParaEstoque()}>Ver estoque</button>
+            <a className="btn btn--ghost" href="#/credito">Analisar meu crédito</a>
+          </div>
+        </div>
+        <QuickSim politica={politica} onVerVeiculos={verAte} />
       </section>
+      <FaixaConfianca />
 
+      <h2 id="estoque" className="section__title estoque-title">Estoque</h2>
       <VehicleFilters filters={filters} onChange={setFilters} onClear={() => setFilters(EMPTY_FILTERS)} totalFavoritos={fav.ids.length} />
 
       <section aria-label="Resultados" aria-live="polite" aria-busy={status === "loading"}>

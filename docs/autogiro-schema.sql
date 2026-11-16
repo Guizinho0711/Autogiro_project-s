@@ -255,7 +255,12 @@ revoke execute on function privado.is_admin() from public, anon;
 grant execute on function privado.is_admin() to authenticated;
 
 grant select, insert, update, delete on public.veiculos to authenticated;
-create policy veiculos_admin_le_tudo on public.veiculos for select to authenticated using ((select privado.is_admin()));
+-- Uma regra de leitura por papel: visitante vê a vitrine; logado vê a vitrine e, se for administrador, tudo.
+drop policy if exists veiculos_leitura_publica on public.veiculos;
+create policy veiculos_leitura_visitante on public.veiculos for select to anon
+  using (status in ('disponivel', 'reservado'));
+create policy veiculos_leitura_logado on public.veiculos for select to authenticated
+  using (status in ('disponivel', 'reservado') or (select privado.is_admin()));
 create policy veiculos_admin_insere on public.veiculos for insert to authenticated with check ((select privado.is_admin()));
 create policy veiculos_admin_altera on public.veiculos for update to authenticated using ((select privado.is_admin())) with check ((select privado.is_admin()));
 create policy veiculos_admin_exclui on public.veiculos for delete to authenticated using ((select privado.is_admin()));
