@@ -12,8 +12,9 @@ const OperacaoDetalhePage = lazy(() => import("./pages/OperacaoDetalhePage.jsx")
 const CreditoPage = lazy(() => import("./pages/CreditoPage.jsx"));
 const TermosPage = lazy(() => import("./pages/TermosPage.jsx"));
 const AdminPage = lazy(() => import("./pages/AdminPage.jsx"));
+const ConexoesPage = lazy(() => import("./pages/ConexoesPage.jsx"));
 
-const TITULOS = { veiculos: "Veículos", operacoes: "Minhas operações", credito: "Análise de crédito", termos: "Termos de uso", admin: "Área do lojista" };
+const TITULOS = { veiculos: "Veículos", operacoes: "Minhas operações", credito: "Pedido de financiamento", termos: "Termos de uso", admin: "Área do lojista", conexoes: "Conexões" };
 
 export default function App() {
   const [dataRef, setDataRef] = useState(todayISO());
@@ -28,6 +29,7 @@ export default function App() {
   else if (page === "credito") content = <CreditoPage key={dec ?? ""} veiculoId={dec} />;
   else if (page === "termos") content = <TermosPage />;
   else if (page === "admin") content = <AdminPage />;
+  else if (page === "conexoes") content = <ConexoesPage />;
   else content = dec ? <VeiculoDetalhePage id={dec} /> : <VeiculosPage />;
 
   const cur = (p) => (page === p || (p === "veiculos" && !TITULOS[page]) ? "page" : undefined);
@@ -64,7 +66,7 @@ export default function App() {
         <div className="container footer__inner">
           <p><strong className="brand"><Marca />AutoGiro</strong><br /><span className="muted small">Projeto acadêmico. Simulações sem IOF e tarifas; condições finais dependem da análise de crédito.</span></p>
           <nav aria-label="Rodapé" className="footer__nav">
-            <a href="#/veiculos">Veículos</a><a href="#/operacoes">Minhas operações</a><a href="#/credito">Crédito</a><a href="#/termos">Termos de uso</a><a href="#/admin">Área do lojista</a>
+            <a href="#/veiculos">Veículos</a><a href="#/operacoes">Minhas operações</a><a href="#/credito">Crédito</a><a href="#/termos">Termos de uso</a><a href="#/admin">Área do lojista</a><a href="#/conexoes">Conexões</a>
           </nav>
           <p className="small muted">© {new Date().getFullYear()} AutoGiro. Todos os direitos reservados.</p>
         </div>

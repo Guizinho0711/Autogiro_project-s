@@ -3,6 +3,8 @@ import { esteiraService } from "../services/esteiraService.js";
 import { vehicleService } from "../services/vehicleService.js";
 import { scoreService, montarRequisicao, faixaJuros, ROTULO_FAIXA_SCORE } from "../services/scoreService.js";
 import { simular } from "../services/simulacaoService.js";
+import { pedidoService, novoNumeroOperacao } from "../services/pedidoService.js";
+import { PedidoAcompanhamento } from "../components/credito/PedidoAcompanhamento.jsx";
 import { usePolitica } from "../hooks/usePolitica.js";
 import { useAsync } from "../hooks/useAsync.js";
 import { JsonTree } from "../components/ui/JsonTree.jsx";
@@ -22,7 +24,6 @@ const EXEMPLO = {
 };
 const ESTADOS = [["SOLTEIRO", "Solteiro(a)"], ["CASADO", "Casado(a)"], ["UNIAO_ESTAVEL", "União estável"], ["DIVORCIADO", "Divorciado(a)"], ["VIUVO", "Viúvo(a)"]];
 const pct = (n, d = 2) => `${n.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d })}%`;
-const novoIdentificador = () => `OP-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, "0")}`;
 
 /** Lê o formulário e devolve { dados } ou { erros }. Regras iguais às do Score (e CPF válido para o Juros). */
 function validar(f, politica) {
@@ -120,7 +121,7 @@ function Resultado({ r, politica, dados, veiculo, onSimular }) {
       <p className="muted small">
         {scoreService.modoDemonstracao
           ? "Modo demonstração: o cálculo foi feito no navegador com as mesmas regras do Score Engine (modelo SCORE_PF v1.1.0). Nada foi enviado."
-          : `Calculado pelo Score Engine (${r.modelo?.codigo} ${r.modelo?.versao}). O próprio Score encaminhou o resultado para a Decisão, com o identificador ${r.identificador}.`}
+          : `Calculado pelo Score Engine (${r.modelo?.codigo} ${r.modelo?.versao}). O próprio Score encaminhou o resultado para a Decisão, com o número ${r.identificador}.`}
       </p>
     </section>
   );
@@ -183,11 +184,14 @@ export default function CreditoPage({ veiculoId }) {
     setErros(v.erros ?? {});
     if (v.erros) { document.getElementById(Object.keys(v.erros)[0] === "cpf" ? "c-cpf" : `c-${Object.keys(v.erros)[0]}`)?.focus(); return; }
     const d = v.dados;
-    const req = montarRequisicao({ ...d, limiteUtilizado: d.limiteUtilizado, limiteTotal: d.limiteTotal, valorFinanciado: Math.round((d.valorVeiculo - d.entrada) * 100) / 100, identificador: novoIdentificador(), dataLiberacao: todayISO(), forcarRecalculo: f.forcarRecalculo });
+    const numero = novoNumeroOperacao();
+    const valorFinanciado = Math.round((d.valorVeiculo - d.entrada) * 100) / 100;
+    const req = montarRequisicao({ ...d, limiteUtilizado: d.limiteUtilizado, limiteTotal: d.limiteTotal, valorFinanciado, identificador: numero, dataLiberacao: todayISO(), forcarRecalculo: f.forcarRecalculo });
     setEnvio({ status: "loading" });
     try {
       const r = await scoreService.avaliar(req);
-      setEnvio({ status: "ok", r, dados: d });
+      pedidoService.registrarEnvio({ numero, valor: valorFinanciado, prazoMeses: d.prazoMeses, score: r.scoreFinal, documento: d.cpf });
+      setEnvio({ status: "ok", r, dados: d, numero });
       requestAnimationFrame(() => document.getElementById("resultado")?.focus());
     } catch (err) { setEnvio({ status: "error", message: err.message }); }
   };
@@ -201,9 +205,13 @@ export default function CreditoPage({ veiculoId }) {
   return (
     <main className="container">
       <section className="intro">
-        <h1>Análise de crédito</h1>
-        <p>Preencha seus dados para calcular o score. Com ele, sai o seu perfil de juros e a parcela real do financiamento.</p>
-        <p className={`badge ${scoreService.modoDemonstracao ? "badge--neutral" : "badge--ok"} mode`}>{scoreService.modoDemonstracao ? "Modo demonstração: cálculo no navegador" : "Conectado ao Score Engine"}</p>
+        <h1>Pedido de financiamento</h1>
+        <p>Preencha seus dados e envie o pedido. O Score calcula o seu perfil, a Decisão avalia e o serviço de juros devolve as parcelas em PRICE e SAC para você escolher.</p>
+        <p className="mode-row">
+          <span className={`badge ${scoreService.modoDemonstracao ? "badge--neutral" : "badge--ok"}`}>{scoreService.modoDemonstracao ? "Score: simulado" : "Score: conectado"}</span>
+          <span className={`badge ${pedidoService.juroSimulado ? "badge--neutral" : "badge--ok"}`}>{pedidoService.juroSimulado ? "Decisão e juros: simulados" : "Juros: conectado"}</span>
+          <a className="link small" href="#/conexoes">Conexões</a>
+        </p>
       </section>
 
       <form className="panel credit-form" onSubmit={enviar} noValidate aria-describedby="envio-erro">
@@ -256,7 +264,7 @@ export default function CreditoPage({ veiculoId }) {
         <label className="check"><input type="checkbox" checked={f.forcarRecalculo} onChange={set("forcarRecalculo")} /><span>Calcular de novo, mesmo que já exista um resultado dos últimos 30 dias</span></label>
         <p id="envio-erro" className="form-error" role="alert">{envio.status === "error" ? envio.message : Object.keys(erros).length ? "Confira os campos destacados." : ""}</p>
         <div className="credit-form__actions">
-          <button className="btn" disabled={envio.status === "loading"}>{envio.status === "loading" ? "Calculando…" : "Calcular score"}</button>
+          <button className="btn" disabled={envio.status === "loading"}>{envio.status === "loading" ? "Enviando…" : "Enviar pedido"}</button>
           <p className="muted small">Seus dados são usados só para este cálculo. Veja os <a className="link" href="#/termos">Termos de uso</a>.</p>
         </div>
       </form>
@@ -264,6 +272,7 @@ export default function CreditoPage({ veiculoId }) {
       <div aria-live="polite">
         {envio.status === "loading" && <div className="panel"><Skeleton style={{ height: 120, width: "100%" }} /></div>}
         {envio.status === "ok" && <Resultado r={envio.r} politica={politica} dados={envio.dados} veiculo={veiculo} onSimular={() => setSimulando(true)} />}
+        {envio.status === "ok" && faixaJuros(politica, envio.r.scoreFinal)?.permiteContratacao !== false && <PedidoAcompanhamento key={envio.numero} numero={envio.numero} score={envio.r.scoreFinal} />}
       </div>
 
       <ConsultaEsteira />

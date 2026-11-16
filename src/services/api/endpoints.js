@@ -8,5 +8,8 @@ export const ENDPOINTS = {
     resumo: (id) => `/operacoes/${encodeURIComponent(id)}/resumo`,
     historico: (id) => `/operacoes/${encodeURIComponent(id)}/historico`,
     pagamento: (id, n) => `/operacoes/${encodeURIComponent(id)}/parcelas/${n}/pagamentos`,
+    amortizacaoSimulacao: (id) => `/operacoes/${encodeURIComponent(id)}/amortizacoes/simulacao`,
+    amortizacao: (id) => `/operacoes/${encodeURIComponent(id)}/amortizacoes`,
+    liquidacao: (id) => `/operacoes/${encodeURIComponent(id)}/liquidacao`,
   },
 };

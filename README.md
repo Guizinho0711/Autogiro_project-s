@@ -29,10 +29,18 @@ Na versão publicada, o catálogo de veículos vem do banco de dados (Supabase) 
 
 **Como liberar um administrador:** crie a conta em `#/admin`, confirme o e-mail e entre. A página mostra um comando `insert into public.administradores ...` com o seu ID. Rode esse comando no SQL Editor do Supabase e recarregue.
 
-### Análise de crédito (integrada ao Score Engine)
+### Pedido de financiamento (Score → Decisão → Juros)
+A tarefa principal do AutoGiro é criar a operação. O pedido percorre a cadeia dos grupos:
+
+```
+AutoGiro → Score → Decisão → Juros → (FinOps e Documentos)
+```
+
 - Formulário com cadastro, renda, dívidas e o financiamento desejado. Vindo da página de um veículo, o valor e a entrada já chegam preenchidos.
-- Envia para o **Score Engine** (`POST /api/v1/score/evaluate`) e mostra o score de 0 a 1000, a classificação, a chance de inadimplência e o que pesou em cada um dos 4 componentes.
-- Liga o score à faixa de juros (A a E) do serviço de juros e calcula a parcela real. O botão abre o simulador já com o perfil do cliente.
+- Ao enviar, o AutoGiro gera o número da operação (`OP-AAAA-NNNNNN`) e manda ao **Score Engine** (`POST /api/v1/score/evaluate`). A tela mostra o score de 0 a 1000, a classificação, a chance de inadimplência e o que pesou em cada componente.
+- O Score passa para a Decisão, e a Decisão, se aprovar, cria a operação no serviço de juros. O AutoGiro **consulta o serviço de juros a cada 3 segundos** (`GET /api/operacoes/por-identificador/{numero}/consolidado`) até a simulação chegar.
+- **Limite de tempo:** se a Decisão recusar, nada chega ao serviço de juros. Depois do tempo configurado (120 s por padrão), a tela avisa e oferece continuar esperando.
+- Quando chega, o cliente vê **PRICE e SAC lado a lado** (parcela, juros, total, IOF e CET) e escolhe. O AutoGiro envia a escolha (`POST /api/operacoes/{id}/definicao`), e o serviço de juros repassa a operação ao FinOps e ao grupo de Documentos.
 - Sem o Score rodando (como no site publicado), o cálculo é feito no navegador reproduzindo as regras do modelo `SCORE_PF v1.1.0`, que são do grupo do Score. A conta foi comparada com o código Java deles em 5.000 casos, sem nenhuma diferença.
 
 ### Minhas operações (integrado ao serviço de operações do grupo FinOps)
@@ -40,6 +48,11 @@ Na versão publicada, o catálogo de veículos vem do banco de dados (Supabase) 
 - Detalhe da operação em três abas: **Resumo** (saldo devedor, valor para quitar, taxas e CET), **Parcelas** (situação, atraso e encargos) e **Histórico** (linha do tempo).
 - **Pagamento de parcela** com confirmação e a divisão do valor entre multa, juros de mora, juros e amortização.
 - **Data de referência** global: permite simular o atraso e os encargos em qualquer data.
+- Aba **Antecipar e quitar**: simula e registra a antecipação de parcelas (as últimas ou as próximas, com desconto dos juros) e a quitação da operação inteira, com confirmação em dois passos.
+
+### Conexões (rede local)
+- Página `#/conexoes` com o endereço de cada grupo (Score, Juros e FinOps), botão **Testar**, opção **Usar simulado** por serviço e o tempo de espera do pedido.
+- Fica salvo no navegador e vale na hora, sem recarregar nem mexer no `.env`.
 
 ### Qualidade da interface
 - Estados de carregamento (skeletons), erro (com "Tentar de novo") e lista vazia em todas as telas.
@@ -125,6 +138,24 @@ Abra `http://localhost:5173`. Com o `.env` padrão, tudo funciona com dados simu
 3. Rode `mvn spring-boot:run` na raiz do Score. Para o site publicado também poder chamar o Score (quando ele estiver hospedado com https), coloque no `.env` do Score: `CORS_ALLOWED_ORIGINS=https://autogiroproject-s.vercel.app`. Ele sobe na porta 8080 e já libera chamadas de `localhost`.
 4. No `.env` do AutoGiro, troque `VITE_MOCK_SCORE` para `false` e reinicie o `npm run dev`.
 
+### No dia da apresentação (rede local)
+
+Cada grupo roda o próprio serviço no computador dele, na mesma rede. O AutoGiro também roda num computador da rede, e não no site publicado: o site publicado é https e o navegador bloqueia chamadas para endereços `http://` de IPs da rede.
+
+1. **Descubra o IP de cada computador.** No Windows: `ipconfig` (linha "Endereço IPv4"); no Mac ou Linux: `ip addr` ou `ifconfig`. Exemplo: `192.168.0.15`.
+2. **Peça a cada grupo para liberar o serviço na rede.** O serviço precisa escutar em todos os endereços (não só `localhost`) e o firewall do Windows precisa permitir a porta. Portas padrão: Score `8080`, Decisão `8081`, FinOps `8083`, Juros `3000`.
+3. **Score:** no `.env` do Score, `DECISION_URL` aponta para o IP da Decisão e `DECISION_ENABLED=true`. O Score já libera chamadas vindas de IPs da rede; se o AutoGiro abrir por outro endereço, adicione em `CORS_ALLOWED_ORIGINS`.
+4. **Suba o AutoGiro aberto para a rede:**
+   ```bash
+   npm install
+   npm run dev -- --host
+   ```
+   O terminal mostra o endereço `Network: http://<seu IP>:5173`. Qualquer computador da rede pode abrir por ele.
+5. **Abra a tela Conexões** (link no rodapé, ou `#/conexoes`). Desmarque "Usar simulado" nos serviços que estão no ar, coloque `http://<IP do grupo>:<porta>`, clique em **Testar todos** e em **Salvar conexões**.
+6. **Faça um pedido** em "Pedido de financiamento". Se algum grupo não estiver no ar, deixe esse serviço em "Usar simulado" e a apresentação continua.
+
+Se aparecer "Sem resposta", confira, nesta ordem: o IP, a porta, se o serviço está rodando e o firewall. Se o teste passar mas o pedido der erro de CORS (no console do navegador), o serviço do grupo precisa liberar o endereço do AutoGiro.
+
 ### Variáveis de ambiente
 
 | Variável | Padrão | Função |
@@ -138,6 +169,9 @@ Abra `http://localhost:5173`. Com o `.env` padrão, tudo funciona com dados simu
 | `VITE_SCORE_URL` | `http://localhost:8080` | Endereço do Score Engine |
 | `VITE_API_URL` | `http://localhost:8083` | Endereço do serviço de operações |
 | `VITE_JUROS_URL` | `http://localhost:3000` | Endereço do serviço de juros |
+| `VITE_ESPERA_PEDIDO_S` | `120` | Quantos segundos esperar a operação chegar ao serviço de juros |
+
+Os endereços e modos também podem ser trocados pela tela **Conexões**, sem reiniciar.
 
 ## Integração com o serviço de operações
 
@@ -541,8 +575,7 @@ Dados que o Score Engine usa (bloco `perfilPF`). Os nomes seguem o contrato dele
 
 - Salvar as simulações no Supabase.
 - Login de clientes e criação de propostas a partir de uma simulação.
-- Telas de amortização antecipada e de liquidação da operação.
-- Integração com a Decisão, assim que o contrato dela chegar, e com o serviço de juros para contratar a operação.
+- Testar a cadeia completa com os serviços reais de todos os grupos na rede local.
 
 ## Créditos
 
