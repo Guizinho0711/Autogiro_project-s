@@ -490,7 +490,48 @@ Dados que o Score Engine usa (bloco `perfilPF`). Os nomes seguem o contrato dele
 
 ## Testes
 
-Última rodada: **16/11/2026**, depois do novo visual (PR #3). Os testes rodam no navegador (Playwright), no celular e no computador, nos temas claro e escuro.
+### Última rodada: 16/11/2026, das 16:02 às 16:04 (horário de Brasília)
+
+Depois do pedido completo, da tela Conexões e de antecipar e quitar (PR #6). Tudo rodou no navegador (Playwright), com o Score, a Decisão e o serviço de juros rodando de verdade em `localhost`. O serviço de juros usa o código de cálculo do grupo de Juros.
+
+| Bateria | Testes | Passaram |
+|---|---:|---:|
+| Pedido de financiamento, Conexões, antecipar e quitar | 19 | 19 |
+| Bateria geral (acessibilidade, responsividade, vitrine, lojista, crédito, operações) | 15 | 15 |
+| Banco de dados (leitura, cadastro, banco fora do ar) | sem erros | sim |
+| Troca de aba e rascunho do lojista | sem erros | sim |
+| Swagger (`/contrato/`) | sem erros | sim |
+
+<details>
+<summary><strong>Ver os 19 testes do pedido, um por um</strong></summary>
+
+| Área | Teste | Resultado | Situação |
+|---|---|---|---|
+| Pedido | Simulado: a simulação PRICE e SAC chega depois do Score | OP-2026-233562 em 5.8 s | Passou |
+| Pedido | Mostra as duas opções com parcelas | R$ 1.410,00 \| R$ 1.720,00 a R$ 1.015,00 | Passou |
+| Pedido | Contratar com SAC registra a operação | Operação OP-2026-233562 registrada com SAC. Definida em 16/11/2026. Em instantes ela aparece em Minhas operações.  Ver a operação | Passou |
+| Operações | A operação nova abre em Minhas operações | OP-2026-233562 | Passou |
+| Operações | Simular antecipação de 3 parcelas (as últimas) | paga R$ 1.535,14, desconto R$ 1.554,86 | Passou |
+| Operações | Antecipação marca as parcelas como pagas | 3 parcelas pagas | Passou |
+| Operações | Quitação encerra a operação | quitada por R$ 46.464,86; situação: Liquidada | Passou |
+| Operações | A operação nova aparece na lista | OP-2026-233562 | Passou |
+| Estabilidade | Sem erros de JavaScript no fluxo simulado | 0 | Passou |
+| Pedido | Recusa: depois do limite de tempo, a tela avisa e oferece esperar mais | 17.9 s; Decisão e serviço de juros Nada chegou ao serviço de juros em 15 segundos. A Decisão pode ter recusado a proposta ou pedido análise manual. não concluída | Passou |
+| Responsividade | Pedido no celular sem rolagem lateral | -15 px | Passou |
+| Conexões | Testar mostra Score e Juros online e FinOps simulado | Online No ar (14 ms) \| Online No ar (17 ms) \| Simulado no navegador | Passou |
+| Conexões | Os endereços ficam salvos ao recarregar | http://localhost:8080 | Passou |
+| Pedido | Real: a operação criada pelo serviço de juros (via Score e Decisão) é encontrada pelo número | OP-2026-268935; Score: conectado Juros: conectado Conexões; Decisão e serviço de juros Aprovado. Taxa do perfil A: 1,50% ao mês. concluída | Passou |
+| Pedido | Real: IOF e CET vêm do cálculo do serviço de juros | IOF R$ 1.499,42, CET 21,68% | Passou |
+| Pedido | Real: a escolha PRICE chega ao serviço de juros (definição) | [juros] operação criada OP-2026-268935 faixa A \| [juros] definida OP-2026-268935 PRICE (enviaria ao FinOps e a Documentos) | Passou |
+| Pedido | Juros fora do ar: mensagem clara e atalho para Conexões | Decisão e serviço de juros Não consegui falar com o serviço de juros em http://localhost:3999. Confira o endereço na tela Conexões. não concluída | Passou |
+| Conexões | "Voltar ao padrão" restaura o modo simulado | Score simulado de novo | Passou |
+| Estabilidade | Sem erros de JavaScript na cadeia real | 0 | Passou |
+
+</details>
+
+### Rodada anterior: 16/11/2026, depois do novo visual (PR #3)
+
+Os testes rodam no navegador (Playwright), no celular e no computador, nos temas claro e escuro.
 
 | Testes | Passaram de primeira | Corrigidos e aprovados | Não verificados |
 |---:|---:|---:|---:|
