@@ -1,0 +1,281 @@
+{
+  "ok": true,
+  "idFinanciamento": "FIN-1794847717769-84B9AE",
+  "status": "FINALIZADO",
+  "mensagem": "Esteira finalizada com sucesso.",
+  "pedido": {
+    "idFinanciamento": "FIN-1794847717769-84B9AE",
+    "status": "FINALIZADO",
+    "criadoEm": "2026-11-16T16:48:37.769Z",
+    "atualizadoEm": "2026-11-16T16:48:37.918Z",
+    "entrada": {
+      "cliente": {
+        "nome": "Cliente Teste",
+        "tipoPessoa": "PF",
+        "cpf": "52998224725",
+        "rendaMensal": 8500,
+        "dividaTotal": 1200,
+        "idade": 34,
+        "estadoCivil": "CASADO",
+        "numeroDependentes": 1,
+        "diasAtrasoUltimos12Meses": 0,
+        "limiteRotativoUtilizado": 1500,
+        "limiteRotativoTotal": 6000,
+        "mesesNoEmpregoAtual": 36,
+        "mesesRelacionamentoBanco": 48
+      },
+      "veiculo": {
+        "id": "e4b8c1d2-0000-4000-8000-000000000003",
+        "marca": "Toyota",
+        "modelo": "Corolla",
+        "versao": "2.0 XEi",
+        "ano": 2020,
+        "valor": 109900,
+        "entrada": 21980
+      },
+      "produtoId": "VEICULO-PRICE",
+      "prazoMeses": 48,
+      "dataLiberacao": "2026-11-16",
+      "primeiroRelacionamento": false
+    },
+    "produtos": {
+      "produtos": [
+        {
+          "id": "IMOVEL-SAC",
+          "nome": "Financiamento Imobiliário SAC",
+          "sistema": "SAC"
+        },
+        {
+          "id": "IMOVEL-PRICE",
+          "nome": "Financiamento Imobiliário PRICE",
+          "sistema": "PRICE"
+        },
+        {
+          "id": "VEICULO-PRICE",
+          "nome": "Financiamento de Veículo PRICE",
+          "sistema": "PRICE",
+          "modalidade": "VEICULOS",
+          "prazoMinMeses": 12,
+          "prazoMaxMeses": 60
+        },
+        {
+          "id": "VEICULO-SAC",
+          "nome": "Financiamento de Veículo SAC",
+          "sistema": "SAC",
+          "modalidade": "VEICULOS",
+          "prazoMinMeses": 12,
+          "prazoMaxMeses": 60
+        }
+      ]
+    },
+    "produtoEscolhido": {
+      "id": "VEICULO-PRICE",
+      "nome": "Financiamento de Veículo PRICE",
+      "sistema": "PRICE",
+      "modalidade": "VEICULOS",
+      "prazoMinMeses": 12,
+      "prazoMaxMeses": 60
+    },
+    "scoreSolicitacao": {
+      "tipoPessoa": "PF",
+      "identificador": "FIN-1794847717769-84B9AE",
+      "valor": 87920,
+      "modalidade": "VEICULOS",
+      "prazoMeses": 48,
+      "amortizacao": "PRICE",
+      "dataLiberacao": "2026-11-16",
+      "primeiroRelacionamento": false,
+      "perfilPF": {
+        "cpf": "52998224725",
+        "rendaMensal": 8500,
+        "dividaTotal": 1200,
+        "idade": 34,
+        "estadoCivil": "CASADO",
+        "numeroDependentes": 1,
+        "diasAtrasoUltimos12Meses": 0,
+        "limiteRotativoUtilizado": 1500,
+        "limiteRotativoTotal": 6000,
+        "mesesNoEmpregoAtual": 36,
+        "mesesRelacionamentoBanco": 48
+      }
+    },
+    "score": {
+      "clienteId": "52998224725",
+      "tipoPessoa": "PF",
+      "scoreFinal": 872,
+      "faixaRisco": "EXCELENTE",
+      "probabilidadeDefault": 0.0128,
+      "modelo": {
+        "codigo": "SCORE_PF",
+        "versao": "v1.1.0"
+      },
+      "calculatedAt": "2026-11-16T16:48:37.836Z",
+      "origem": "CALCULO",
+      "componentes": [
+        {
+          "nome": "Histórico de Pagamento",
+          "pontuacao": 850,
+          "pontuacaoMaxima": 1000,
+          "pesoPonderado": 0.35,
+          "motivo": "Pontualidade integral na liquidação dos compromissos financeiros."
+        },
+        {
+          "nome": "Capacidade Financeira",
+          "pontuacao": 900,
+          "pontuacaoMaxima": 1000,
+          "pesoPonderado": 0.3,
+          "motivo": "Excelente capacidade de pagamento com margem de renda livre superior a 80%."
+        },
+        {
+          "nome": "Endividamento e Limites",
+          "pontuacao": 850,
+          "pontuacaoMaxima": 1000,
+          "pesoPonderado": 0.2,
+          "motivo": "Gestão prudencial de linhas emergenciais, com uso inferior a 30% do teto."
+        },
+        {
+          "nome": "Estabilidade e Relacionamento",
+          "pontuacao": 900,
+          "pontuacaoMaxima": 1000,
+          "pesoPonderado": 0.15,
+          "motivo": "Vínculo empregatício (36 meses) e relacionamento bancário (48 meses)."
+        }
+      ],
+      "fatoresImpacto": [
+        "Pontualidade integral na liquidação dos compromissos financeiros.",
+        "Excelente capacidade de pagamento com margem de renda livre superior a 80%.",
+        "Gestão prudencial de linhas emergenciais, com uso inferior a 30% do teto.",
+        "Vínculo empregatício (36 meses) e relacionamento bancário (48 meses)."
+      ],
+      "identificador": "FIN-1794847717769-84B9AE",
+      "valor": 87920,
+      "modalidade": "VEICULOS",
+      "prazoMeses": 48,
+      "amortizacao": "PRICE",
+      "dataLiberacao": "2026-11-16",
+      "primeiroRelacionamento": false
+    },
+    "decisao": {
+      "status": "APROVADO",
+      "motivo": "Aprovado pelo serviço simulado.",
+      "integracaoJuros": {
+        "origem": "JUROS_VIA_DECISAO",
+        "modalidade": "VEICULOS",
+        "faixaRisco": "A",
+        "taxaMensalPercentual": 1.5,
+        "taxaAnualPercentual": 19.56,
+        "sistema": "PRICE",
+        "prazoMeses": 48,
+        "valorFinanciado": 87920,
+        "parcelas": {
+          "primeira": 2582.65,
+          "ultima": 2582.65
+        },
+        "totalJuros": 36047.2,
+        "totalPago": 123967.2
+      },
+      "mock": true
+    },
+    "integracaoJuros": {
+      "origem": "JUROS_VIA_DECISAO",
+      "modalidade": "VEICULOS",
+      "faixaRisco": "A",
+      "taxaMensalPercentual": 1.5,
+      "taxaAnualPercentual": 19.56,
+      "sistema": "PRICE",
+      "prazoMeses": 48,
+      "valorFinanciado": 87920,
+      "parcelas": {
+        "primeira": 2582.65,
+        "ultima": 2582.65
+      },
+      "totalJuros": 36047.2,
+      "totalPago": 123967.2
+    },
+    "simulacao": {
+      "origem": "JUROS_VIA_DECISAO",
+      "modalidade": "VEICULOS",
+      "faixaRisco": "A",
+      "taxaMensalPercentual": 1.5,
+      "taxaAnualPercentual": 19.56,
+      "sistema": "PRICE",
+      "prazoMeses": 48,
+      "valorFinanciado": 87920,
+      "parcelas": {
+        "primeira": 2582.65,
+        "ultima": 2582.65
+      },
+      "totalJuros": 36047.2,
+      "totalPago": 123967.2
+    },
+    "operacao": {
+      "mock": true,
+      "status": "FINALIZADA",
+      "protocolo": "OP-1794847717915",
+      "idFinanciamento": "FIN-1794847717769-84B9AE",
+      "observacao": "Finalização simulada para teste local."
+    },
+    "etapas": [
+      {
+        "etapa": "PRODUTOS",
+        "status": "INICIADA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:37.769Z"
+      },
+      {
+        "etapa": "PRODUTOS",
+        "status": "CONCLUIDA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:37.825Z"
+      },
+      {
+        "etapa": "SCORE",
+        "status": "INICIADA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:37.825Z"
+      },
+      {
+        "etapa": "SCORE",
+        "status": "CONCLUIDA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:37.840Z"
+      },
+      {
+        "etapa": "DECISAO",
+        "status": "INICIADA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:37.840Z"
+      },
+      {
+        "etapa": "DECISAO",
+        "status": "CONCLUIDA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:37.901Z"
+      },
+      {
+        "etapa": "SIMULACAO",
+        "status": "RECEBIDA_VIA_DECISAO",
+        "detalhe": "Resultado de Juros recebido no campo integracaoJuros da Decisão.",
+        "em": "2026-11-16T16:48:37.901Z"
+      },
+      {
+        "etapa": "OPERACOES",
+        "status": "INICIADA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:37.901Z"
+      },
+      {
+        "etapa": "OPERACOES",
+        "status": "CONCLUIDA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:37.918Z"
+      },
+      {
+        "etapa": "ESTEIRA",
+        "status": "FINALIZADA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:37.918Z"
+      }
+    ]
+  }
+}

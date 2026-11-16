@@ -1,0 +1,79 @@
+--- a/backend/server.js
++++ b/backend/server.js
+@@ -156,9 +156,18 @@
+     if (!String(cliente.setorAtuacao || '').trim()) erros.push('cliente.setorAtuacao é obrigatório');
+   }
+ 
+-  if (!numeroValido(body?.imovel?.valor, { minimo: 0.01 })) erros.push('imovel.valor deve ser maior que zero');
+-  if (!numeroValido(body?.imovel?.entrada)) erros.push('imovel.entrada deve ser zero ou maior');
+-  if (Number(body?.imovel?.entrada) >= Number(body?.imovel?.valor)) erros.push('imovel.entrada deve ser menor que imovel.valor');
++  // O bem financiado vem em "imovel" (CredCasa) ou em "veiculo" (AutoGiro). Um dos dois, nunca os dois.
++  const { chave, bem } = bemFinanciado(body);
++  if (body?.imovel && body?.veiculo) erros.push('envie imovel ou veiculo, não os dois');
++  if (!numeroValido(bem?.valor, { minimo: 0.01 })) erros.push(`${chave}.valor deve ser maior que zero`);
++  if (!numeroValido(bem?.entrada)) erros.push(`${chave}.entrada deve ser zero ou maior`);
++  if (Number(bem?.entrada) >= Number(bem?.valor)) erros.push(`${chave}.entrada deve ser menor que ${chave}.valor`);
++  if (chave === 'veiculo') {
++    if (!String(bem?.marca || '').trim()) erros.push('veiculo.marca é obrigatório');
++    if (!String(bem?.modelo || '').trim()) erros.push('veiculo.modelo é obrigatório');
++    if (!numeroValido(bem?.ano, { inteiro: true, minimo: 1980 })) erros.push('veiculo.ano deve ser um inteiro a partir de 1980');
++    if (!numeroValido(body?.prazoMeses, { inteiro: true, minimo: 12 }) || Number(body?.prazoMeses) > 60) erros.push('prazoMeses deve ficar entre 12 e 60 para veículos');
++  }
+   if (!body?.produtoId) erros.push('produtoId é obrigatório');
+   if (!numeroValido(body?.prazoMeses, { inteiro: true, minimo: 1 })) erros.push('prazoMeses deve ser um inteiro maior que zero');
+   if (body?.dataLiberacao && !/^\d{4}-\d{2}-\d{2}$/.test(String(body.dataLiberacao))) erros.push('dataLiberacao deve estar no formato AAAA-MM-DD');
+@@ -167,17 +176,25 @@
+   return erros;
+ }
+ 
+-function montarPayloadScore(entrada, idFinanciamento) {
++function bemFinanciado(body) {
++  if (body?.veiculo) return { chave: 'veiculo', bem: body.veiculo, modalidade: 'VEICULOS' };
++  return { chave: 'imovel', bem: body?.imovel, modalidade: 'OUTROS_BENS' };
++}
++
++function montarPayloadScore(entrada, idFinanciamento, produto) {
+   const cliente = entrada.cliente || {};
+   const tipoPessoa = String(cliente.tipoPessoa || 'PF').trim().toUpperCase();
+-  const valorFinanciado = Number(entrada.imovel.valor) - Number(entrada.imovel.entrada);
++  const { bem, modalidade } = bemFinanciado(entrada);
++  const valorFinanciado = Number(bem.valor) - Number(bem.entrada);
+ 
+   const payload = {
+     tipoPessoa,
+     identificador: idFinanciamento,
+     valor: valorFinanciado,
+-    modalidade: 'OUTROS_BENS',
++    modalidade,
+     prazoMeses: Number(entrada.prazoMeses),
++    // O Score aceita PRICE ou SAC e repassa à Decisão e ao Juros.
++    amortizacao: ['PRICE', 'SAC'].includes(produto?.sistema) ? produto.sistema : null,
+     dataLiberacao: entrada.dataLiberacao || new Date().toISOString().slice(0, 10),
+     primeiroRelacionamento: entrada.primeiroRelacionamento ?? false
+   };
+@@ -235,7 +252,7 @@
+       juros: 'encadeado pela Decisão; CredCasa não chama diretamente'
+     },
+     regras: {
+-      modalidadeScore: 'OUTROS_BENS',
++      modalidadeScore: { imovel: 'OUTROS_BENS', veiculo: 'VEICULOS' },
+       decisao: ['APROVADO', 'REPROVADO', 'ANALISE_MANUAL']
+     }
+   });
+@@ -314,7 +331,7 @@
+ 
+     // 2. Score — contrato real informado pelo grupo Score
+     registrarEtapa(pedido, 'SCORE', 'INICIADA');
+-    const scorePayload = montarPayloadScore(entrada, idFinanciamento);
++    const scorePayload = montarPayloadScore(entrada, idFinanciamento, pedido.produtoEscolhido);
+     pedido.scoreSolicitacao = scorePayload;
+ 
+     const score = await chamarJson(endpoints.score, {
+@@ -395,6 +412,7 @@
+         idFinanciamento,
+         cliente: entrada.cliente,
+         imovel: entrada.imovel,
++        veiculo: entrada.veiculo,
+         produtoId: entrada.produtoId,
+         produto: pedido.produtoEscolhido,
+         prazoMeses: entrada.prazoMeses,

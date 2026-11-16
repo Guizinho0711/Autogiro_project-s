@@ -1,0 +1,212 @@
+{
+  "ok": true,
+  "idFinanciamento": "FIN-1794847718025-D38E85",
+  "status": "REPROVADO",
+  "mensagem": "Financiamento reprovado pela Decisão.",
+  "pedido": {
+    "idFinanciamento": "FIN-1794847718025-D38E85",
+    "status": "REPROVADO",
+    "criadoEm": "2026-11-16T16:48:38.025Z",
+    "atualizadoEm": "2026-11-16T16:48:38.034Z",
+    "entrada": {
+      "cliente": {
+        "nome": "Cliente Teste",
+        "tipoPessoa": "PF",
+        "cpf": "52998224725",
+        "rendaMensal": 8500,
+        "dividaTotal": 6000,
+        "idade": 34,
+        "estadoCivil": "CASADO",
+        "numeroDependentes": 1,
+        "diasAtrasoUltimos12Meses": 75,
+        "limiteRotativoUtilizado": 5800,
+        "limiteRotativoTotal": 6000,
+        "mesesNoEmpregoAtual": 6,
+        "mesesRelacionamentoBanco": 6
+      },
+      "veiculo": {
+        "id": "e4b8c1d2-0000-4000-8000-000000000003",
+        "marca": "Toyota",
+        "modelo": "Corolla",
+        "versao": "2.0 XEi",
+        "ano": 2020,
+        "valor": 109900,
+        "entrada": 21980
+      },
+      "produtoId": "VEICULO-PRICE",
+      "prazoMeses": 48,
+      "dataLiberacao": "2026-11-16",
+      "primeiroRelacionamento": false
+    },
+    "produtos": {
+      "produtos": [
+        {
+          "id": "IMOVEL-SAC",
+          "nome": "Financiamento Imobiliário SAC",
+          "sistema": "SAC"
+        },
+        {
+          "id": "IMOVEL-PRICE",
+          "nome": "Financiamento Imobiliário PRICE",
+          "sistema": "PRICE"
+        },
+        {
+          "id": "VEICULO-PRICE",
+          "nome": "Financiamento de Veículo PRICE",
+          "sistema": "PRICE",
+          "modalidade": "VEICULOS",
+          "prazoMinMeses": 12,
+          "prazoMaxMeses": 60
+        },
+        {
+          "id": "VEICULO-SAC",
+          "nome": "Financiamento de Veículo SAC",
+          "sistema": "SAC",
+          "modalidade": "VEICULOS",
+          "prazoMinMeses": 12,
+          "prazoMaxMeses": 60
+        }
+      ]
+    },
+    "produtoEscolhido": {
+      "id": "VEICULO-PRICE",
+      "nome": "Financiamento de Veículo PRICE",
+      "sistema": "PRICE",
+      "modalidade": "VEICULOS",
+      "prazoMinMeses": 12,
+      "prazoMaxMeses": 60
+    },
+    "scoreSolicitacao": {
+      "tipoPessoa": "PF",
+      "identificador": "FIN-1794847718025-D38E85",
+      "valor": 87920,
+      "modalidade": "VEICULOS",
+      "prazoMeses": 48,
+      "amortizacao": "PRICE",
+      "dataLiberacao": "2026-11-16",
+      "primeiroRelacionamento": false,
+      "perfilPF": {
+        "cpf": "52998224725",
+        "rendaMensal": 8500,
+        "dividaTotal": 6000,
+        "idade": 34,
+        "estadoCivil": "CASADO",
+        "numeroDependentes": 1,
+        "diasAtrasoUltimos12Meses": 75,
+        "limiteRotativoUtilizado": 5800,
+        "limiteRotativoTotal": 6000,
+        "mesesNoEmpregoAtual": 6,
+        "mesesRelacionamentoBanco": 6
+      }
+    },
+    "score": {
+      "clienteId": "52998224725",
+      "tipoPessoa": "PF",
+      "scoreFinal": 252,
+      "faixaRisco": "CRITICO",
+      "probabilidadeDefault": 0.0748,
+      "modelo": {
+        "codigo": "SCORE_PF",
+        "versao": "v1.1.0"
+      },
+      "calculatedAt": "2026-11-16T16:48:38.029Z",
+      "origem": "CALCULO",
+      "componentes": [
+        {
+          "nome": "Histórico de Pagamento",
+          "pontuacao": 150,
+          "pontuacaoMaxima": 1000,
+          "pesoPonderado": 0.35,
+          "motivo": "Inadimplência severa registrada no histórico recente (>60 dias)."
+        },
+        {
+          "nome": "Capacidade Financeira",
+          "pontuacao": 300,
+          "pontuacaoMaxima": 1000,
+          "pesoPonderado": 0.3,
+          "motivo": "Comprometimento crítico da renda com passivos pré-existentes (>50%)."
+        },
+        {
+          "nome": "Endividamento e Limites",
+          "pontuacao": 250,
+          "pontuacaoMaxima": 1000,
+          "pesoPonderado": 0.2,
+          "motivo": "Exposição elevada em instrumentos rotativos de alta taxa de juros."
+        },
+        {
+          "nome": "Estabilidade e Relacionamento",
+          "pontuacao": 400,
+          "pontuacaoMaxima": 1000,
+          "pesoPonderado": 0.15,
+          "motivo": "Vínculo empregatício (6 meses) e relacionamento bancário (6 meses)."
+        }
+      ],
+      "fatoresImpacto": [
+        "Inadimplência severa registrada no histórico recente (>60 dias).",
+        "Comprometimento crítico da renda com passivos pré-existentes (>50%).",
+        "Exposição elevada em instrumentos rotativos de alta taxa de juros.",
+        "Vínculo empregatício (6 meses) e relacionamento bancário (6 meses)."
+      ],
+      "identificador": "FIN-1794847718025-D38E85",
+      "valor": 87920,
+      "modalidade": "VEICULOS",
+      "prazoMeses": 48,
+      "amortizacao": "PRICE",
+      "dataLiberacao": "2026-11-16",
+      "primeiroRelacionamento": false
+    },
+    "decisao": {
+      "status": "REPROVADO",
+      "motivo": "Reprovado pelo serviço simulado.",
+      "integracaoJuros": null,
+      "mock": true
+    },
+    "integracaoJuros": null,
+    "simulacao": null,
+    "operacao": null,
+    "etapas": [
+      {
+        "etapa": "PRODUTOS",
+        "status": "INICIADA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:38.025Z"
+      },
+      {
+        "etapa": "PRODUTOS",
+        "status": "CONCLUIDA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:38.027Z"
+      },
+      {
+        "etapa": "SCORE",
+        "status": "INICIADA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:38.027Z"
+      },
+      {
+        "etapa": "SCORE",
+        "status": "CONCLUIDA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:38.031Z"
+      },
+      {
+        "etapa": "DECISAO",
+        "status": "INICIADA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:38.031Z"
+      },
+      {
+        "etapa": "DECISAO",
+        "status": "CONCLUIDA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:38.034Z"
+      },
+      {
+        "etapa": "ESTEIRA",
+        "status": "ENCERRADA",
+        "detalhe": "Decisão respondeu REPROVADO. Operações não foram acionadas.",
+        "em": "2026-11-16T16:48:38.034Z"
+      }
+    ]
+  }
+}

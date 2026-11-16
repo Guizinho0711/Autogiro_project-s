@@ -1,0 +1,5 @@
+node_modules
+dist
+.env
+# gerado pelo npm run docs:api (a Vercel gera de novo a cada publicação)
+public/contrato/
