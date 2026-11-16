@@ -149,7 +149,302 @@ Referência completa dos campos, tipos e regras: [`docs/API.md`](docs/API.md).
 
 ## Contrato da API do AutoGiro
 
-O contrato do nosso próprio back-end está em [`docs/autogiro-api.openapi.yaml`](docs/autogiro-api.openapi.yaml) (OpenAPI 3.0). Abra em [editor.swagger.io](https://editor.swagger.io) para ver as rotas, os campos e os exemplos. Ele cobre catálogo, simulação, política de crédito, cliente, propostas, análise de crédito e contratação, e já está alinhado ao serviço de juros. O Score já está documentado com os campos reais; só a Decisão continua marcada como pendente até o contrato dela chegar.
+O contrato do nosso back-end está em [`docs/autogiro-api.openapi.yaml`](docs/autogiro-api.openapi.yaml) (OpenAPI 3.0). Ele cobre catálogo, simulação, política de crédito, cliente, propostas, análise de crédito e contratação, e já está alinhado ao Score Engine e ao serviço de juros. Só a Decisão continua pendente, até o contrato dela chegar.
+
+**[Abrir o contrato interativo (Swagger)](https://autogiroproject-s.vercel.app/contrato/)** · [Baixar o YAML](docs/autogiro-api.openapi.yaml)
+
+### Fluxo entre os serviços
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as Cliente
+    participant A as AutoGiro (site + API)
+    participant S as Score Engine :8080
+    participant D as Decisão :8081
+    participant J as Juros :3000
+    participant O as Operações :8083
+    C->>A: escolhe o veículo e simula (POST /simulacoes)
+    C->>A: cria e envia a proposta (POST /propostas)
+    A->>S: POST /api/v1/score/evaluate
+    S->>D: POST /api/v1/decisao (o próprio Score envia)
+    A->>J: POST /api/operacoes (taxa pela faixa do score)
+    J-->>A: simulação PRICE e SAC, com IOF e CET
+    C->>A: escolhe PRICE ou SAC (POST /propostas/{id}/contratacao)
+    A->>J: POST /api/operacoes/{id}/definicao
+    J->>O: registra a operação
+    C->>O: acompanha parcelas e paga (Minhas operações)
+```
+
+### Rotas e campos
+
+<!-- API:INICIO -->
+> Gerado a partir de [`docs/autogiro-api.openapi.yaml`](docs/autogiro-api.openapi.yaml) pelo comando `npm run docs:api`. Não edite este trecho à mão: edite o YAML.
+
+**AutoGiro API 1.0.0** · Base: `http://localhost:3001`
+
+#### Sistema
+
+| Método | Caminho | O que faz | Envia | Recebe | Acesso |
+|---|---|---|---|---|---|
+| `GET` | `/health` | Verifica se a API está no ar |  | 200 object | Pública |
+
+#### Veículos
+Catálogo público
+
+| Método | Caminho | O que faz | Envia | Recebe | Acesso |
+|---|---|---|---|---|---|
+| `GET` | `/veiculos` | Lista veículos com filtros, ordenação e paginação |  | 200 `ListaVeiculos` | Pública |
+| `GET` | `/veiculos/{id}` | Detalhe de um veículo |  | 200 `Veiculo` | Pública |
+
+#### Simulações
+Cálculo PRICE e SAC
+
+| Método | Caminho | O que faz | Envia | Recebe | Acesso |
+|---|---|---|---|---|---|
+| `POST` | `/simulacoes` | Calcula e registra uma simulação | `SimulacaoRequest` | 201 `Simulacao` | Login |
+| `GET` | `/simulacoes/{id}` | Consulta uma simulação do usuário logado |  | 200 `Simulacao` | Login |
+
+#### Crédito
+Política de crédito: prazos e taxas por perfil
+
+| Método | Caminho | O que faz | Envia | Recebe | Acesso |
+|---|---|---|---|---|---|
+| `GET` | `/credito/politica` | Política de crédito para veículos (prazos e taxa por faixa de score) |  | 200 `PoliticaCredito` | Pública |
+
+#### Clientes
+Cadastro do usuário logado
+
+| Método | Caminho | O que faz | Envia | Recebe | Acesso |
+|---|---|---|---|---|---|
+| `GET` | `/clientes/me` | Cadastro do usuário logado |  | 200 `Cliente` | Login |
+| `PUT` | `/clientes/me` | Cria ou atualiza o cadastro do usuário logado | `ClienteRequest` | 200 `Cliente` | Login |
+
+#### Propostas
+Pedido de financiamento e análise de crédito
+
+| Método | Caminho | O que faz | Envia | Recebe | Acesso |
+|---|---|---|---|---|---|
+| `GET` | `/propostas` | Lista as propostas do usuário logado |  | 200 lista de `Proposta` | Login |
+| `POST` | `/propostas` | Cria uma proposta em rascunho | `PropostaRequest` | 201 `Proposta` | Login |
+| `GET` | `/propostas/{id}` | Consulta uma proposta |  | 200 `Proposta` | Login |
+| `POST` | `/propostas/{id}/envio` | Envia o rascunho (RASCUNHO para ENVIADA) |  | 200 `Proposta` | Login |
+| `POST` | `/propostas/{id}/cancelamento` | Cancela uma proposta em rascunho ou enviada |  | 200 `Proposta` | Login |
+| `POST` | `/propostas/{id}/contratacao` | Contrata a proposta aprovada, escolhendo PRICE ou SAC | `ContratacaoRequest` | 200 `Contratacao` | Login |
+| `GET` | `/propostas/{id}/eventos` | Histórico de status da proposta |  | 200 lista de `EventoProposta` | Login |
+| `POST` | `/propostas/{id}/analise-credito` | Analisa o crédito: Score, Decisão e Juros *(pendente)* | `AnaliseCreditoRequest` | 200 `AnaliseCredito` | Login |
+
+<details>
+<summary><strong>Campos de cada objeto (20 schemas)</strong></summary>
+
+##### `Erro`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `erro` | string | sim | Mensagem legível para o usuário. |
+| `codigo` | string | sim | Código estável: VALIDACAO, NAO_AUTENTICADO, NAO_ENCONTRADO, ESTADO_INVALIDO, ESTEIRA_INDISPONIVEL. |
+| `detalhes` | lista de object |  |  |
+
+##### `CategoriaVeiculo`
+
+Valores: `hatch`, `sedan`, `suv`, `picape`, `moto`
+
+##### `StatusProposta`
+
+Valores: `RASCUNHO`, `ENVIADA`, `EM_ANALISE`, `APROVADA`, `REPROVADA`, `CONTRATADA`, `CANCELADA`
+
+##### `Veiculo`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `id` | string (uuid) | sim |  |
+| `marca` | string | sim |  Ex.: `Fiat` |
+| `modelo` | string | sim |  Ex.: `Argo` |
+| `versao` | string |  |  Ex.: `1.0 Drive` |
+| `ano` | integer | sim |  Ex.: `2021` |
+| `quilometragem` | integer | sim |  Ex.: `42000` |
+| `preco` | number (double) | sim |  Ex.: `58900` |
+| `categoria` | `CategoriaVeiculo` | sim |  |
+| `combustivel` | `flex`, `gasolina`, `diesel`, `eletrico` | sim |  |
+| `cambio` | `manual`, `automatico` | sim |  |
+| `cidade` | string | sim |  Ex.: `São Paulo` |
+| `status` | `disponivel`, `reservado` | sim |  |
+| `cor` | string |  |  Ex.: `Prata` |
+| `opcionais` | lista de string |  |  |
+| `descricao` | string |  |  |
+| `fotoUrl` | string (uri) |  | Sempre https. Foto enviada pelo lojista (Supabase Storage, bucket `veiculos`) ou de uma fonte com licença livre. Ex.: `https://commons.wikimedia.org/wiki/Special:FilePath/Toyota_Corolla_2.0_XEi_2022.jpg?width=960` |
+| `fotoCredito` | string |  |  Ex.: `Wikimedia Commons` |
+| `fotoFonteUrl` | string (uri) |  | Página com autor e licença da foto. |
+
+##### `ListaVeiculos`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `itens` | lista de `Veiculo` | sim |  |
+| `total` | integer | sim | Total de veículos que atendem aos filtros. |
+| `pagina` | integer | sim |  |
+| `tamanhoPagina` | integer | sim |  |
+
+##### `SimulacaoRequest`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `veiculoId` | string (uuid) | sim |  |
+| `entrada` | number | sim | Menor que o preço do veículo. Ex.: `11780` |
+| `prazoMeses` | integer | sim | Limites da modalidade VEICULOS; consulte `GET /credito/politica`. Ex.: `48` |
+| `sistema` | `PRICE`, `SAC` | sim |  |
+| `faixaRisco` | `A`, `B`, `C`, `D` | sim | Perfil de crédito estimado. A taxa vem da política. O score real, que define a taxa final, só é conhecido na análise de crédito. A faixa E é recusada e não é aceita aqui. Ex.: `B` |
+
+##### `Parcela`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `numero` | integer | sim |  |
+| `valor` | number (double) | sim |  |
+| `juros` | number (double) | sim |  |
+| `amortizacao` | number (double) | sim |  |
+| `saldoDevedor` | number (double) | sim |  |
+
+##### `Simulacao`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `id` | string (uuid) | sim |  |
+| `veiculoId` | string (uuid) | sim |  |
+| `valorVeiculo` | number (double) | sim |  |
+| `entrada` | number (double) | sim |  |
+| `prazoMeses` | integer | sim |  |
+| `taxaMensalPercentual` | number | sim |  Ex.: `1.8` |
+| `sistema` | `PRICE`, `SAC` | sim |  |
+| `valorFinanciado` | number (double) | sim | valorVeiculo menos entrada. |
+| `primeiraParcela` | number (double) | sim |  |
+| `ultimaParcela` | number (double) | sim |  |
+| `totalPago` | number (double) | sim | Soma das parcelas, sem a entrada. |
+| `totalJuros` | number (double) | sim |  |
+| `criadaEm` | string (date-time) | sim |  |
+| `parcelas` | lista de `Parcela` | sim |  |
+| `faixaRisco` | `A`, `B`, `C`, `D` | sim | Perfil usado na simulação. O que fica gravado é a taxa (`taxaMensalPercentual`). |
+
+##### `ClienteRequest`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `nome` | string | sim |  |
+| `email` | string (email) | sim |  |
+| `telefone` | string |  |  Ex.: `11999998888` |
+
+##### `Cliente`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `id` | string (uuid) |  |  |
+| `criadoEm` | string (date-time) |  |  |
+
+##### `PropostaRequest`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `veiculoId` | string (uuid) | sim |  |
+| `simulacaoId` | string (uuid) |  |  |
+| `observacao` | string |  |  |
+
+##### `Proposta`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `id` | string (uuid) | sim |  |
+| `clienteId` | string (uuid) | sim |  |
+| `veiculoId` | string (uuid) | sim |  |
+| `simulacaoId` | string (uuid) |  |  |
+| `status` | `StatusProposta` | sim |  |
+| `numeroOperacao` | string |  | Preenchido pelo back-end quando a operação é registrada no serviço de operações. Ex.: `OP-2026-0001` |
+| `observacao` | string |  |  |
+| `criadaEm` | string (date-time) | sim |  |
+| `atualizadaEm` | string (date-time) | sim |  |
+
+##### `EventoProposta`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `id` | integer (int64) | sim |  |
+| `status` | `StatusProposta` | sim |  |
+| `observacao` | string |  |  |
+| `criadoEm` | string (date-time) | sim |  |
+
+##### `AnaliseCreditoRequest`
+Dados que o Score Engine usa (bloco `perfilPF`). Os nomes seguem o contrato dele; o back-end só repassa.
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `cpf` | string | sim | Só dígitos, com dígitos verificadores válidos (o serviço de juros confere). Dado pessoal: nunca em log. Ex.: `52998224725` |
+| `rendaMensal` | number | sim |  Ex.: `8500` |
+| `dividaTotal` | number | sim | Soma das dívidas em aberto. Ex.: `1200` |
+| `idade` | integer | sim |  Ex.: `34` |
+| `estadoCivil` | `SOLTEIRO`, `CASADO`, `UNIAO_ESTAVEL`, `DIVORCIADO`, `VIUVO` | sim |  Ex.: `CASADO` |
+| `numeroDependentes` | integer | sim | Cada dependente desconta R$ 600 da renda na capacidade financeira. Ex.: `1` |
+| `diasAtrasoUltimos12Meses` | integer | sim |  Ex.: `0` |
+| `limiteRotativoUtilizado` | number | sim | Cartão e cheque especial usados. Ex.: `1500` |
+| `limiteRotativoTotal` | number | sim |  Ex.: `6000` |
+| `mesesNoEmpregoAtual` | integer | sim |  Ex.: `36` |
+| `mesesRelacionamentoBanco` | integer | sim | 0 envia `primeiroRelacionamento: true` ao Score. Ex.: `48` |
+| `forcarRecalculo` | boolean |  | O Score reaproveita um resultado de até 30 dias para os mesmos dados; true força um cálculo novo. |
+
+##### `AnaliseCredito`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `identificadorOperacao` | string | sim | Identificador da operação criada no serviço de juros, quando a análise é aprovada. Ex.: `OP-2026-0001` |
+| `score` | object | sim | Resposta do Score Engine, sem os dados pessoais. |
+| `perfilJuros` | object | sim | Faixa de juros (serviço de juros) em que o scoreFinal cai. |
+| `decisao` | object |  | Formato provisório até a Decisão enviar o contrato. |
+
+##### `FaixaCredito`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `faixa` | `A`, `B`, `C`, `D`, `E` | sim |  |
+| `scoreMin` | integer | sim |  Ex.: `800` |
+| `scoreMax` | integer | sim |  Ex.: `1000` |
+| `taxaMensalPercentual` | number | sim | Nulo na faixa E (contratação recusada). Ex.: `1.5` |
+| `taxaAnualPercentual` | number | sim |  Ex.: `19.56` |
+| `descricao` | string | sim |  Ex.: `Risco muito baixo` |
+| `permiteContratacao` | boolean | sim |  |
+
+##### `PoliticaCredito`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `modalidade` | string | sim |  Ex.: `VEICULOS` |
+| `prazoMinMeses` | integer | sim |  Ex.: `12` |
+| `prazoMaxMeses` | integer | sim |  Ex.: `60` |
+| `tetoTaxaMensalPercentual` | number | sim |  Ex.: `3` |
+| `faixas` | lista de `FaixaCredito` | sim |  |
+
+##### `ContratacaoRequest`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `sistema` | `PRICE`, `SAC` | sim |  |
+
+##### `Contratacao`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `proposta` | `Proposta` | sim |  |
+| `operacao` | object | sim |  |
+
+##### `ComponenteScore`
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `nome` | string | sim |  Ex.: `Histórico de Pagamento` |
+| `pontuacao` | number | sim |  Ex.: `850` |
+| `pontuacaoMaxima` | number | sim |  Ex.: `1000` |
+| `pesoPonderado` | number | sim | Fração. Pesos do modelo PF: histórico 0,35, capacidade 0,30, endividamento 0,20, estabilidade 0,15. Ex.: `0.35` |
+| `motivo` | string | sim |  Ex.: `Pontualidade integral na liquidação dos compromissos financeiros.` |
+
+</details>
+<!-- API:FIM -->
 
 ## Decisões de projeto
 
@@ -168,6 +463,3 @@ O contrato do nosso próprio back-end está em [`docs/autogiro-api.openapi.yaml`
 ## Equipe
 
 Preencha com os nomes dos integrantes e a instituição.
-
-
-
