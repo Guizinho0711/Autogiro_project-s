@@ -118,7 +118,7 @@ Abra `http://localhost:5173`. Com o `.env` padrão, tudo funciona com dados simu
 
 1. Na pasta do [Score-Engine](https://github.com/viniciusgm25/Score-Engine), crie o `.env` a partir do `.env.exemplo` e preencha a senha do PostgreSQL.
 2. Se a Decisão (porta 8081) não estiver rodando, coloque `DECISION_ENABLED=false` nesse `.env`. Sem isso, o Score responde erro ao tentar avisar a Decisão.
-3. Rode `mvn spring-boot:run` na raiz do Score. Ele sobe na porta 8080 e já libera chamadas de `localhost`.
+3. Rode `mvn spring-boot:run` na raiz do Score. Para o site publicado também poder chamar o Score (quando ele estiver hospedado com https), coloque no `.env` do Score: `CORS_ALLOWED_ORIGINS=https://autogiroproject-s.vercel.app`. Ele sobe na porta 8080 e já libera chamadas de `localhost`.
 4. No `.env` do AutoGiro, troque `VITE_MOCK_SCORE` para `false` e reinicie o `npm run dev`.
 
 ### Variáveis de ambiente
@@ -152,6 +152,8 @@ Referência completa dos campos, tipos e regras: [`docs/API.md`](docs/API.md).
 O contrato do nosso back-end está em [`docs/autogiro-api.openapi.yaml`](docs/autogiro-api.openapi.yaml) (OpenAPI 3.0). Ele cobre catálogo, simulação, política de crédito, cliente, propostas, análise de crédito e contratação, e já está alinhado ao Score Engine e ao serviço de juros. Só a Decisão continua pendente, até o contrato dela chegar.
 
 **[Abrir o contrato interativo (Swagger)](https://autogiroproject-s.vercel.app/contrato/)** · [Baixar o YAML](docs/autogiro-api.openapi.yaml)
+
+O YAML publicado tem CORS liberado, então outros grupos podem abrir o contrato direto em ferramentas como o [editor.swagger.io](https://editor.swagger.io) (File → Import URL → `https://autogiroproject-s.vercel.app/contrato/autogiro-api.openapi.yaml`) ou no Postman.
 
 **Esteira de crédito para veículos (CredCasa):** proposta de contrato e JSONs reais de requisição e resposta em [`docs/esteira-veiculos/`](docs/esteira-veiculos/README.md).
 
