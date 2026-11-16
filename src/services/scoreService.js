@@ -97,7 +97,7 @@ async function avaliarMock(req) {
 }
 
 export const scoreService = {
-  modoDemonstracao: env.MOCK_SCORE,
+  get modoDemonstracao() { return env.MOCK_SCORE; },
   /** Avalia o score. O corpo vem de montarRequisicao. */
   async avaliar(req, signal) {
     if (env.MOCK_SCORE) return avaliarMock(req);

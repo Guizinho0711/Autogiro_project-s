@@ -37,13 +37,13 @@ const views = (o, ref) => o.parcelas.map((p) => parcelaView(p, ref));
 function operacaoView(o, ref) {
   const v = views(o, ref);
   const dias = Math.max(0, ...v.map((p) => p.diasEmAtraso));
-  const status = v.every((p) => p.status === "PAGA") ? "LIQUIDADA" : dias > 90 ? "INADIMPLENTE" : dias > 0 ? "EM_ATRASO" : "ATIVA";
+  const status = o.liquidada || v.every((p) => p.status === "PAGA") ? "LIQUIDADA" : dias > 90 ? "INADIMPLENTE" : dias > 0 ? "EM_ATRASO" : "ATIVA";
   const saldoDevedor = r2(o.parcelas.reduce((s, p, i) => s + p.amortizacao * (v[i].valorEmAberto / p.valorParcela), 0));
-  return { id: o.id, numeroOperacao: o.numeroOperacao, clienteId: "CLI-0001", tipoPessoa: "PF", status, diasEmAtraso: dias,
+  return { id: o.id, numeroOperacao: o.numeroOperacao, clienteId: o.clienteId ?? "CLI-0001", tipoPessoa: "PF", status, diasEmAtraso: dias,
     definidoEm: `${o.lib}T12:00:00Z`, dataLiberacao: o.lib, saldoDevedor,
     produto: { codigo: "VEIC", nome: "Financiamento de veículo", modalidadeBcb: "Aquisição de veículos" },
     condicoesFinanceiras: { valorAprovado: o.valor, prazoMeses: o.n, quantidadeParcelas: o.n, taxaJuros: o.taxa, taxaJurosAnual: Math.round((Math.pow(1 + o.taxa, 12) - 1) * 1e4) / 1e4,
-      faixaRisco: "B", tetoAplicado: false, sistemaAmortizacao: "PRICE", primeiroVencimento: o.primeiro },
+      faixaRisco: o.faixa ?? "B", tetoAplicado: false, sistemaAmortizacao: o.sistema ?? "PRICE", primeiroVencimento: o.primeiro },
     encargos: { iof: { diario: 0, adicional: 0, total: 0 }, tarifaCadastro: 0, total: 0 }, valorLiberado: o.valor,
     cet: { mensal: o.taxa, anual: Math.round((Math.pow(1 + o.taxa, 12) - 1) * 1e4) / 1e4 }, criadoEm: `${o.lib}T12:00:00Z` };
 }
@@ -54,6 +54,56 @@ function find(id) {
   return o;
 }
 const sum = (arr, f) => r2(arr.reduce((s, x) => s + f(x), 0));
+
+// ---- Antecipação e quitação (mesmas regras do FinOps, de forma simplificada) ----
+const proximoNum = () => Math.max(0, ...DB.map((o) => o.id)) + 1;
+// Valor presente da parcela k (1 = próxima a vencer), descontando a fração f já decorrida do período.
+const vp = (valor, taxa, k, f) => r2(valor / Math.pow(1 + taxa, Math.max(0, k - f)));
+function fracaoDecorrida(o, refISO) {
+  const anteriores = o.parcelas.map((p) => p.vencimento).filter((d) => d <= refISO);
+  const inicio = anteriores.length ? anteriores[anteriores.length - 1] : o.lib;
+  return Math.min(1, Math.max(0, days(inicio, refISO) / 30));
+}
+function abertasFuturas(o, refISO) {
+  const v = views(o, refISO);
+  if (v.some((p) => p.status === "VENCIDA" || p.status === "PARCIALMENTE_PAGA")) {
+    throw new ApiError("Há parcela vencida em aberto ou paga em parte. Regularize antes de antecipar.", { status: 400 });
+  }
+  return o.parcelas.filter((p, i) => v[i].status === "PENDENTE");
+}
+function calculaAmortizacao(o, { quantidadeParcelas, modo = "ULTIMAS", dataReferencia }) {
+  const refISO = dataReferencia || todayISO(), q = Number(quantidadeParcelas), m = String(modo).toUpperCase();
+  const abertas = abertasFuturas(o, refISO);
+  if (!(Number.isInteger(q) && q > 0)) throw new ApiError("Informe quantas parcelas antecipar.", { status: 400 });
+  if (q >= abertas.length) throw new ApiError("Isso cobre todas as parcelas em aberto. Use a quitação da operação.", { status: 400 });
+  const f = fracaoDecorrida(o, refISO);
+  const escolhidas = (m === "PROXIMAS" ? abertas.slice(0, q) : abertas.slice(-q));
+  const parcelas = escolhidas.map((p) => {
+    const k = abertas.indexOf(p) + 1, presente = p.vencimento === refISO ? p.valorParcela : vp(p.valorParcela, o.taxa, k, f);
+    return { numero: p.numero, vencimento: p.vencimento, valorParcela: p.valorParcela, valorPresente: presente, desconto: r2(p.valorParcela - presente), amortizacao: presente, juros: 0 };
+  });
+  const totais = { valorParcelas: sum(parcelas, (p) => p.valorParcela), desconto: sum(parcelas, (p) => p.desconto), valorPresente: sum(parcelas, (p) => p.valorPresente), amortizacao: sum(parcelas, (p) => p.amortizacao), juros: 0 };
+  totais.valorAPagar = totais.valorPresente;
+  const antes = operacaoView(o, refISO).saldoDevedor;
+  return { numeroOperacao: o.numeroOperacao, modo: m, dataReferencia: refISO, quantidadeParcelas: q, parcelas, totais,
+    saldoDevedorAntes: antes, saldoDevedorApos: r2(Math.max(0, antes - totais.amortizacao)), quantidadeParcelasRestantes: abertas.length - q };
+}
+function calculaLiquidacao(o, refISO) {
+  if (operacaoView(o, refISO).status === "LIQUIDADA") throw new ApiError("A operação já está liquidada.", { status: 400 });
+  const v = views(o, refISO), f = fracaoDecorrida(o, refISO);
+  const vencidas = v.filter((p) => p.status === "VENCIDA" || (p.diasEmAtraso > 0 && p.valorEmAberto > 0))
+    .map((p) => ({ numero: p.numero, vencimento: p.vencimento, diasEmAtraso: p.diasEmAtraso, valorEmAberto: p.valorEmAberto, multa: p.encargos.multa, jurosMora: p.encargos.jurosMora, total: p.totalParaQuitar }));
+  const futuras = v.filter((p) => p.valorEmAberto > 0 && p.diasEmAtraso === 0);
+  const aVencerParcelas = futuras.map((p, i) => {
+    const presente = p.vencimento === refISO ? p.valorEmAberto : vp(p.valorEmAberto, o.taxa, i + 1, f);
+    return { numero: p.numero, vencimento: p.vencimento, valorEmAberto: p.valorEmAberto, valorPresente: presente, desconto: r2(p.valorEmAberto - presente) };
+  });
+  const aVencer = { parcelas: aVencerParcelas, valorNominal: sum(aVencerParcelas, (p) => p.valorEmAberto), valorPresente: sum(aVencerParcelas, (p) => p.valorPresente) };
+  aVencer.desconto = r2(aVencer.valorNominal - aVencer.valorPresente); aVencer.amortizacao = aVencer.valorPresente; aVencer.juros = 0;
+  const totalVencidas = sum(vencidas, (p) => p.total);
+  return { numeroOperacao: o.numeroOperacao, dataReferencia: refISO, valorParaQuitar: r2(totalVencidas + aVencer.valorPresente),
+    saldoDevedor: operacaoView(o, refISO).saldoDevedor, vencidas: { parcelas: vencidas, total: totalVencidas }, aVencer };
+}
 
 export const mockApi = {
   async list(ref) { await wait(); return DB.map((o) => operacaoView(o, ref)); },
@@ -97,5 +147,48 @@ export const mockApi = {
       operacao: { numeroOperacao: o.numeroOperacao, status: op.status, saldoDevedor: op.saldoDevedor }, registradoEm };
     if (identificadorPagamento) replays.set(identificadorPagamento, res);
     return res;
+  },
+  async simularAmortizacao(id, params) { await wait(); return calculaAmortizacao(find(id), params); },
+  async amortizar(id, { quantidadeParcelas, modo, dataPagamento, identificadorPagamento }) {
+    await wait(700);
+    if (identificadorPagamento && replays.has(identificadorPagamento)) return replays.get(identificadorPagamento);
+    const o = find(id), sim = calculaAmortizacao(o, { quantidadeParcelas, modo, dataReferencia: dataPagamento });
+    sim.parcelas.forEach((x) => { const p = o.parcelas.find((y) => y.numero === x.numero); p.pago = p.valorParcela; p.desconto = x.desconto; });
+    const evento = { id: o.eventos.length + 1, tipo: "AMORTIZACAO_ANTECIPADA", origem: "REGISTRADO", dataEfeito: sim.dataReferencia, registradoEm: new Date().toISOString(),
+      valor: sim.totais.valorAPagar, descricao: `${sim.quantidadeParcelas} parcela(s) antecipada(s), desconto de R$ ${sim.totais.desconto.toFixed(2).replace(".", ",")}`,
+      lancamentos: sim.parcelas.map((p) => ({ numeroParcela: p.numero, amortizacao: p.amortizacao, juros: 0, desconto: p.desconto })) };
+    o.eventos.push(evento);
+    const res = { eventoId: evento.id, tipo: "AMORTIZACAO_ANTECIPADA", numeroOperacao: o.numeroOperacao, modo: sim.modo, identificadorPagamento, dataPagamento: sim.dataReferencia,
+      quantidadeParcelas: sim.quantidadeParcelas, lancamentos: sim.parcelas, totais: sim.totais, saldoDevedorAntes: sim.saldoDevedorAntes, saldoDevedorApos: sim.saldoDevedorApos, quantidadeParcelasRestantes: sim.quantidadeParcelasRestantes };
+    if (identificadorPagamento) replays.set(identificadorPagamento, res);
+    return res;
+  },
+  async liquidacao(id, ref) { await wait(); return calculaLiquidacao(find(id), ref || todayISO()); },
+  async liquidar(id, { valor, dataPagamento, identificadorPagamento }) {
+    await wait(700);
+    if (identificadorPagamento && replays.has(identificadorPagamento)) return replays.get(identificadorPagamento);
+    const o = find(id), refISO = dataPagamento || todayISO(), calc = calculaLiquidacao(o, refISO);
+    if (Math.abs(Number(valor) - calc.valorParaQuitar) > 0.009) throw new ApiError(`O valor para quitar nesta data é R$ ${calc.valorParaQuitar.toFixed(2).replace(".", ",")}. Consulte de novo e confirme.`, { status: 400 });
+    o.parcelas.forEach((p) => { p.pago = p.valorParcela; });
+    o.liquidada = true;
+    const evento = { id: o.eventos.length + 1, tipo: "LIQUIDACAO", origem: "REGISTRADO", dataEfeito: refISO, registradoEm: new Date().toISOString(), valor: calc.valorParaQuitar,
+      descricao: `Operação quitada, desconto de R$ ${calc.aVencer.desconto.toFixed(2).replace(".", ",")}`, lancamentos: [] };
+    o.eventos.push(evento);
+    const res = { id: evento.id, dataPagamento: refISO, valor: calc.valorParaQuitar, identificadorPagamento, vencidas: calc.vencidas.parcelas, aVencer: { parcelas: calc.aVencer.parcelas.map((p) => p.numero), valorNominal: calc.aVencer.valorNominal, desconto: calc.aVencer.desconto } };
+    if (identificadorPagamento) replays.set(identificadorPagamento, res);
+    return res;
+  },
+  /** Modo demonstração: o "serviço de juros" simulado registra aqui a operação definida (como o Juros real faz no FinOps). */
+  registrarDoJuros(op) {
+    const sim = op.simulacoes[op.definicao.sistema];
+    const lib = op.entrada.dataLiberacao;
+    const parcelas = sim.cronograma.map((c) => ({ numero: c.numero, vencimento: c.vencimento, valorParcela: c.valor, amortizacao: c.amortizacao, juros: c.juros, saldoDevedor: c.saldoDevedor, pago: 0, multaPaga: 0, moraPaga: 0 }));
+    const existente = DB.find((o) => o.numeroOperacao === op.identificador);
+    if (existente) return existente;
+    const nova = { id: proximoNum(), numeroOperacao: op.identificador, valor: op.entrada.valor, n: op.entrada.prazoMeses, taxa: op.taxa.taxaFinalMes / 100, primeiro: parcelas[0].vencimento,
+      lib, parcelas, sistema: op.definicao.sistema, faixa: op.taxa.faixaRisco, clienteId: op.cliente.documento,
+      eventos: [{ id: 1, tipo: "OPERACAO_REGISTRADA", origem: "REGISTRADO", dataEfeito: lib, registradoEm: new Date().toISOString(), descricao: "Recebida do serviço de juros", lancamentos: [] }] };
+    DB.unshift(nova);
+    return nova;
   },
 };

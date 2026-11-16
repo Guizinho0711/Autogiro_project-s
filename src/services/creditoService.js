@@ -32,12 +32,13 @@ const fromJuros = (m) => ({
   })),
 });
 
-let cache = null;
+let cache = null, cacheUrl = null;
 
 export const creditoService = {
   /** Política de crédito de veículos. Se o serviço de juros não responder, usa a tabela de referência. */
   politica(signal) {
     if (env.MOCK_CREDITO) return Promise.resolve(POLITICA_REFERENCIA);
+    if (cacheUrl !== env.JUROS_URL) { cache = null; cacheUrl = env.JUROS_URL; }
     cache ??= http("/api/modalidades/VEICULOS", { baseUrl: env.JUROS_URL, signal })
       .then(fromJuros)
       .catch(() => { cache = null; return { ...POLITICA_REFERENCIA, origem: "referencia" }; });

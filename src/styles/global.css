@@ -431,3 +431,50 @@ body:has(.comparebar) .footer { padding-bottom: 96px; }
   .nav a { padding: 0 7px; font-size: var(--fs-xs); } .nav a[aria-current="page"]::after { left: 7px; right: 7px; }
   .theme-btn { width: 36px; height: 36px; }
 }
+
+/* ===== Pedido de financiamento ===== */
+.mode-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 16px; }
+.pedido { display: grid; gap: 16px; }
+.pedido__numero { font-variant-numeric: tabular-nums; font-size: var(--fs-sm); padding: 4px 10px; border: 1px solid var(--c-line-strong); border-radius: var(--radius-sm); }
+.etapas { list-style: none; margin: 0; padding: 0; display: grid; }
+.etapa { position: relative; display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; padding-bottom: 18px; }
+.etapa:not(:last-child)::before { content: ""; position: absolute; left: 11px; top: 26px; bottom: 2px; width: 1px; background: var(--c-line-strong); }
+.etapa__marca { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--c-line-strong); color: var(--c-primary-ink); background: var(--c-bg); }
+.etapa--feito .etapa__marca { background: var(--c-primary); border-color: var(--c-primary); }
+.etapa--agora .etapa__marca { border: 2px solid var(--c-ink); }
+.etapa--agora .etapa__marca::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--c-ink); animation: pulsa 1.2s ease-in-out infinite; }
+.etapa--falhou .etapa__marca { color: var(--bad-ink); background: var(--bad-bg); border-color: transparent; }
+.etapa--depois { opacity: .55; }
+.etapa__texto { display: grid; gap: 2px; padding-top: 1px; }
+.etapa__texto strong { font-weight: 500; }
+@keyframes pulsa { 50% { transform: scale(.5); opacity: .4; } }
+.pedido__espera { display: grid; gap: 8px; justify-items: start; }
+.progresso { width: 100%; height: 4px; background: var(--c-surface-2); border-radius: 99px; overflow: hidden; }
+.progresso span { display: block; height: 100%; background: var(--c-ink); transition: width 1s linear; }
+.pedido__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.pedido__escolha { display: grid; gap: 16px; justify-items: start; }
+.opcoes { display: grid; gap: 12px; width: 100%; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+.opcao { display: grid; gap: 6px; text-align: left; font: inherit; color: var(--c-ink); padding: 18px 20px; background: var(--c-bg); border: 1px solid var(--c-line); border-radius: var(--radius); cursor: pointer; transition: border-color .2s, background-color .2s, transform .15s; }
+.opcao:hover:not(:disabled) { border-color: var(--c-line-strong); }
+.opcao:active:not(:disabled) { transform: scale(.99); }
+.opcao.is-on { border-color: var(--c-ink); box-shadow: inset 0 0 0 1px var(--c-ink); }
+.opcao__nome { font-size: var(--fs-sm); color: var(--c-muted); }
+.opcao__valor { font-size: 1.5rem; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.opcao__dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; margin: 6px 0 0; }
+.opcao__dl dt { font-size: var(--fs-xs); color: var(--c-muted); }
+.opcao__dl dd { margin: 0; font-variant-numeric: tabular-nums; }
+.alert.small { font-size: var(--fs-sm); }
+
+/* ===== Conexões ===== */
+.conexoes { display: grid; gap: 0; }
+.conexao__head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 24px; margin-bottom: 16px; }
+.conexao__head p { margin-top: 4px; max-width: 60ch; }
+.conexao__linha { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end; margin-top: 12px; }
+.conexao__status { margin-top: 12px; min-height: 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+@media (max-width: 560px) { .conexao__linha { grid-template-columns: 1fr; } }
+
+/* ===== Antecipar e quitar ===== */
+.ant-quitar { display: grid; gap: 0; }
+.ant-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); align-items: end; margin: 16px 0 8px; }
+.ant-quitar .stats { margin-top: 16px; }
+@media (prefers-reduced-motion: reduce) { .etapa--agora .etapa__marca::after { animation: none; } }

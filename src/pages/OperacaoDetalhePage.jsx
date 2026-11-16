@@ -3,11 +3,12 @@ import { operacaoService as api } from "../services/operacaoService.js";
 import { useAsync } from "../hooks/useAsync.js";
 import { StatusBadge } from "../components/operacoes/StatusBadge.jsx";
 import { PagarParcelaDialog } from "../components/operacoes/PagarParcelaDialog.jsx";
+import { AnteciparQuitar } from "../components/operacoes/AnteciparQuitar.jsx";
 import { Skeleton } from "../components/ui/Skeleton.jsx";
 import { StateMessage } from "../components/ui/StateMessage.jsx";
 import { TIPO_EVENTO, formatDate, formatMoney, formatPct } from "../utils/format.js";
 
-const TABS = [["resumo", "Resumo"], ["parcelas", "Parcelas"], ["historico", "Histórico"]];
+const TABS = [["resumo", "Resumo"], ["parcelas", "Parcelas"], ["antecipar", "Antecipar e quitar"], ["historico", "Histórico"]];
 
 export default function OperacaoDetalhePage({ id, dataRef }) {
   const [tab, setTab] = useState("resumo");
@@ -75,6 +76,8 @@ export default function OperacaoDetalhePage({ id, dataRef }) {
                   </table>
                 </div>
               )}
+
+              {tab === "antecipar" && <AnteciparQuitar id={id} dataRef={dataRef} operacao={o} parcelas={parcelas} onMudou={reload} />}
 
               {tab === "historico" && (
                 <ol className="timeline">
