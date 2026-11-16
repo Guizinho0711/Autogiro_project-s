@@ -4,7 +4,7 @@ import { useComparar } from "../../state/store.js";
 import { useAsync } from "../../hooks/useAsync.js";
 import { estimativa } from "../../services/estimativa.js";
 import { CATEGORY_LABELS, FUEL_LABELS, TRANSMISSION_LABELS, formatBRL, formatKm, formatMoney } from "../../utils/format.js";
-import { VehicleArt } from "./VehicleArt.jsx";
+import { VehiclePhoto } from "./VehiclePhoto.jsx";
 
 function CompareDialog({ ids, taxa, onClose, onRemove }) {
   const ref = useRef(null);
@@ -34,7 +34,7 @@ function CompareDialog({ ids, taxa, onClose, onRemove }) {
             <caption className="sr-only">Comparação lado a lado</caption>
             <thead><tr><td />{lista.map((v) => (
               <th key={v.id} scope="col">
-                <div className="compare__head"><VehicleArt category={v.category} color={v.color?.hex} /><a href={`#/veiculos/${v.id}`} onClick={() => ref.current.close()}>{v.brand} {v.model}</a><span className="muted small">{v.version}</span>
+                <div className="compare__head"><VehiclePhoto vehicle={v} /><a href={`#/veiculos/${v.id}`} onClick={() => ref.current.close()}>{v.brand} {v.model}</a><span className="muted small">{v.version}</span>
                   <button type="button" className="link-btn" onClick={() => onRemove(v.id)}>Remover</button></div>
               </th>))}</tr></thead>
             <tbody>{linhas.map(([nome, fn]) => <tr key={nome}><th scope="row">{nome}</th>{lista.map((v) => <td key={v.id}>{fn(v)}</td>)}</tr>)}</tbody>

@@ -216,3 +216,62 @@ insert into public.veiculos (marca, modelo, versao, ano, quilometragem, preco, c
   ('Fiat',       'Strada',   '1.3 Freedom CD',     2022, 31000,  96900.00, 'picape', 'flex',     'manual',     'Campinas',       'disponivel'),
   ('Honda',      'CG 160',   'Titan',              2023,  9000,  15900.00, 'moto',   'flex',     'manual',     'São Paulo',      'disponivel'),
   ('Yamaha',     'Fazer 250','ABS',                2022, 12000,  21800.00, 'moto',   'gasolina', 'manual',     'Guarulhos',      'disponivel');
+
+-- =====================================================================
+-- Atualização: fotos, cor, opcionais e área do lojista (administradores)
+-- =====================================================================
+alter table public.veiculos
+  add column if not exists cor text,
+  add column if not exists opcionais text[] not null default '{}',
+  add column if not exists foto_url text,
+  add column if not exists foto_credito text,
+  add column if not exists foto_fonte_url text,
+  add column if not exists descricao text;
+alter table public.veiculos
+  add constraint veiculos_foto_url_https check (foto_url is null or foto_url ~ '^https://'),
+  add constraint veiculos_foto_fonte_https check (foto_fonte_url is null or foto_fonte_url ~ '^https://'),
+  add constraint veiculos_textos_tamanho check (char_length(marca) between 1 and 40 and char_length(modelo) between 1 and 60
+    and coalesce(char_length(versao),0) <= 80 and char_length(cidade) between 1 and 60 and coalesce(char_length(descricao),0) <= 2000);
+
+-- Quem pode cadastrar veículos
+create table if not exists public.administradores (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table public.administradores enable row level security;
+revoke all on public.administradores from anon, authenticated;
+grant select on public.administradores to authenticated;
+create policy administradores_ver_proprio on public.administradores
+  for select to authenticated using (user_id = (select auth.uid()));
+
+-- Função usada pelas regras; fica num schema fora da API pública
+create schema if not exists privado;
+revoke all on schema privado from public, anon;
+grant usage on schema privado to authenticated;
+create or replace function privado.is_admin()
+returns boolean language sql stable security definer set search_path = ''
+as $$ select exists (select 1 from public.administradores a where a.user_id = (select auth.uid())) $$;
+revoke execute on function privado.is_admin() from public, anon;
+grant execute on function privado.is_admin() to authenticated;
+
+grant select, insert, update, delete on public.veiculos to authenticated;
+create policy veiculos_admin_le_tudo on public.veiculos for select to authenticated using ((select privado.is_admin()));
+create policy veiculos_admin_insere on public.veiculos for insert to authenticated with check ((select privado.is_admin()));
+create policy veiculos_admin_altera on public.veiculos for update to authenticated using ((select privado.is_admin())) with check ((select privado.is_admin()));
+create policy veiculos_admin_exclui on public.veiculos for delete to authenticated using ((select privado.is_admin()));
+
+create or replace function public.tocar_updated_at() returns trigger language plpgsql set search_path = '' as $$
+begin new.updated_at := now(); return new; end $$;
+drop trigger if exists veiculos_updated_at on public.veiculos;
+create trigger veiculos_updated_at before update on public.veiculos for each row execute function public.tocar_updated_at();
+
+-- Fotos: leitura pública, envio só por administrador (até 5 MB, JPG/PNG/WebP)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('veiculos', 'veiculos', true, 5242880, array['image/jpeg','image/png','image/webp'])
+on conflict (id) do update set public = excluded.public, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+create policy fotos_veiculos_admin_envia on storage.objects for insert to authenticated with check (bucket_id = 'veiculos' and (select privado.is_admin()));
+create policy fotos_veiculos_admin_altera on storage.objects for update to authenticated using (bucket_id = 'veiculos' and (select privado.is_admin()));
+create policy fotos_veiculos_admin_apaga on storage.objects for delete to authenticated using (bucket_id = 'veiculos' and (select privado.is_admin()));
+
+-- Para tornar uma conta administradora (rode no SQL Editor, com o id do usuário):
+-- insert into public.administradores (user_id) values ('<id do usuário>');

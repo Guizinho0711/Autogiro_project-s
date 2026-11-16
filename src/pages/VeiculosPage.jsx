@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { vehicleService } from "../services/vehicleService.js";
+import { env } from "../config/env.js";
 import { taxaDaFaixa } from "../services/creditoService.js";
 import { usePolitica } from "../hooks/usePolitica.js";
 import { useAsync } from "../hooks/useAsync.js";
@@ -67,7 +68,7 @@ export default function VeiculosPage() {
         )}
         {status === "success" && itens.length > 0 && (
           <>
-            <p className="count">{itens.length} {itens.length === 1 ? "veículo" : "veículos"}</p>
+            <p className="count">{itens.length} {itens.length === 1 ? "veículo" : "veículos"}{data.origem === "exemplo" && !env.MOCK_VEHICLES && <span className="muted"> (catálogo de exemplo: o banco de dados não respondeu)</span>}</p>
             <div className="grid">{itens.map((v) => <VehicleCard key={v.id} vehicle={v} taxa={taxa} onSimular={setSimulando} />)}</div>
           </>
         )}

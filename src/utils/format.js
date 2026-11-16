@@ -20,3 +20,9 @@ export const TIPO_EVENTO = {
   OPERACAO_REGISTRADA: "Operação registrada", PAGAMENTO: "Pagamento", AMORTIZACAO_ANTECIPADA: "Amortização antecipada",
   LIQUIDACAO: "Liquidação", PARCELA_VENCIDA: "Parcela vencida", OPERACAO_INADIMPLENTE: "Operação inadimplente",
 };
+/** "12.345,67" ou "12345.67" → 12345.67. Vazio ou inválido → NaN. */
+export const parseNum = (s) => {
+  const t = String(s ?? "").trim();
+  if (!t) return NaN;
+  return Number(t.includes(",") ? t.replace(/\./g, "").replace(",", ".") : t);
+};

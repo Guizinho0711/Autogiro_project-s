@@ -1,7 +1,7 @@
 import { CATEGORY_LABELS, FUEL_LABELS, TRANSMISSION_LABELS, formatBRL, formatKm, formatMoney } from "../../utils/format.js";
 import { useComparar, useFavoritos } from "../../state/store.js";
 import { estimativa } from "../../services/estimativa.js";
-import { VehicleArt } from "./VehicleArt.jsx";
+import { VehiclePhoto } from "./VehiclePhoto.jsx";
 
 export function FavoriteButton({ id, nome }) {
   const fav = useFavoritos();
@@ -32,7 +32,7 @@ export function VehicleCard({ vehicle: v, taxa, onSimular }) {
   return (
     <article className="card">
       <div className="card__media">
-        <VehicleArt category={v.category} color={v.color?.hex} />
+        <VehiclePhoto vehicle={v} />
         <div className="card__badges">
           <span className="tag">{CATEGORY_LABELS[v.category]}</span>
           {reserved && <span className="tag tag--warn">Reservado</span>}

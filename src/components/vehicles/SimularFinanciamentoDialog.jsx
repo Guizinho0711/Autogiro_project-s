@@ -7,13 +7,13 @@ import { formatMoney } from "../../utils/format.js";
 const parse = (s) => Number(String(s).replace(/\./g, "").replace(",", "."));
 const pct = (n) => `${n.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}%`;
 
-export function SimularFinanciamentoDialog({ vehicle, onClose }) {
+export function SimularFinanciamentoDialog({ vehicle, onClose, faixaInicial }) {
   const dialog = useRef(null);
   const politica = usePolitica();
   const [entrada, setEntrada] = useState(String(Math.round(vehicle.priceBRL * 0.2)));
   const [meses, setMeses] = useState(48);
   const [sistema, setSistema] = useState("PRICE");
-  const [faixa, setFaixa] = useState("B");
+  const [faixa, setFaixa] = useState(faixaInicial ?? "B");
 
   useEffect(() => { dialog.current.showModal(); }, []);
 

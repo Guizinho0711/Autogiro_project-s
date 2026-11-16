@@ -8,17 +8,31 @@ O foco desta etapa é um **front-end completo e organizado**, já ligado a um ba
 
 **Site publicado:** [autogiroproject-s.vercel.app](https://autogiroproject-s.vercel.app)
 
-A versão publicada usa dados simulados (mock) para veículos e operações, porque o back-end de operações roda localmente. Para ver a integração real, siga o passo a passo de [Como rodar](#como-rodar).
+Na versão publicada, o catálogo de veículos vem do banco de dados (Supabase) e tem fotos reais. As operações usam dados simulados (mock), porque o back-end de operações roda localmente. Para ver a integração real, siga o passo a passo de [Como rodar](#como-rodar).
 
 ## O que foi feito
 
 ### Veículos e simulador
+- Catálogo lido do banco de dados (Supabase), com **fotos reais** de cada modelo (Wikimedia Commons, licenças livres, com link para autor e licença). Se o banco não responder, o site mostra o catálogo de exemplo.
 - Vitrine com busca por marca ou modelo, categorias em um toque, preço máximo e ordenação.
 - **Favoritos** (ficam salvos no navegador) e **comparador** de até 3 veículos lado a lado.
 - Página de cada veículo com ficha técnica, opcionais, parcelas por prazo, veículos parecidos e botão de compartilhar.
 - **Simulador de financiamento**: entrada (atalhos de 0% a 40%), prazo de 12 a 60 meses, **perfil de crédito A a D** e sistema **PRICE** ou **SAC**. A taxa de cada perfil é a mesma da modalidade `VEICULOS` do serviço de juros (1,50% a 3,00% ao mês).
 - Seções de como funciona, tabela de taxas por perfil e perguntas frequentes.
 - Resultado na hora: parcela, valor financiado, total pago, total de juros e cronograma completo. Os cálculos são feitos em centavos inteiros, e a última parcela zera o saldo ao centavo.
+
+### Área do lojista (cadastro de veículos)
+- Página `#/admin`, com login do Supabase. Só contas da tabela `administradores` conseguem cadastrar; quem tenta sem permissão é barrado pelo próprio banco (RLS).
+- Cadastro, edição e exclusão de veículos, com envio de foto (reduzida no navegador e guardada no Supabase Storage), cor, opcionais e descrição.
+- Situação de cada veículo: disponível, reservado, vendido ou oculto. Vendido e oculto saem da vitrine, mas continuam no banco.
+
+**Como liberar um administrador:** crie a conta em `#/admin`, confirme o e-mail e entre. A página mostra um comando `insert into public.administradores ...` com o seu ID. Rode esse comando no SQL Editor do Supabase e recarregue.
+
+### Análise de crédito (integrada ao Score Engine)
+- Formulário com cadastro, renda, dívidas e o financiamento desejado. Vindo da página de um veículo, o valor e a entrada já chegam preenchidos.
+- Envia para o **Score Engine** (`POST /api/v1/score/evaluate`) e mostra o score de 0 a 1000, a classificação, a chance de inadimplência e o que pesou em cada um dos 4 componentes.
+- Liga o score à faixa de juros (A a E) do serviço de juros e calcula a parcela real. O botão abre o simulador já com o perfil do cliente.
+- Sem o Score rodando (como no site publicado), o cálculo é feito no navegador com as mesmas regras do modelo `SCORE_PF v1.1.0`. A conta foi comparada com o código Java do Score em 5.000 casos, sem nenhuma diferença.
 
 ### Minhas operações (integrado ao back-end)
 - Lista de operações com busca por número e filtro por situação (em dia, em atraso, inadimplente, liquidada).
@@ -32,11 +46,12 @@ A versão publicada usa dados simulados (mock) para veículos e operações, por
 - Reenvio seguro de pagamentos: cada tentativa leva um identificador próprio para evitar duplicidade.
 
 ### Banco de dados
-Modelo relacional em PostgreSQL (Supabase) com 6 tabelas, restrições de integridade e segurança por linha (RLS):
+Modelo relacional em PostgreSQL (Supabase) com 7 tabelas, restrições de integridade e segurança por linha (RLS):
 
 | Tabela | Conteúdo |
 |---|---|
-| `veiculos` | Catálogo de veículos |
+| `veiculos` | Catálogo de veículos, com foto, cor, opcionais e descrição |
+| `administradores` | Contas que podem cadastrar veículos |
 | `clientes` | Cadastro ligado ao login do Supabase |
 | `simulacoes` | Simulações geradas (valores, prazo, taxa, sistema, totais) |
 | `simulacao_parcelas` | Cronograma de cada simulação |
@@ -99,13 +114,24 @@ Abra `http://localhost:5173`. Com o `.env` padrão, tudo funciona com dados simu
 3. No `.env` do AutoGiro, troque `VITE_MOCK_OPERACOES` para `false`.
 4. Reinicie o `npm run dev`.
 
+### Usando o Score Engine real
+
+1. Na pasta do [Score-Engine](https://github.com/viniciusgm25/Score-Engine), crie o `.env` a partir do `.env.exemplo` e preencha a senha do PostgreSQL.
+2. Se a Decisão (porta 8081) não estiver rodando, coloque `DECISION_ENABLED=false` nesse `.env`. Sem isso, o Score responde erro ao tentar avisar a Decisão.
+3. Rode `mvn spring-boot:run` na raiz do Score. Ele sobe na porta 8080 e já libera chamadas de `localhost`.
+4. No `.env` do AutoGiro, troque `VITE_MOCK_SCORE` para `false` e reinicie o `npm run dev`.
+
 ### Variáveis de ambiente
 
 | Variável | Padrão | Função |
 |---|---|---|
-| `VITE_MOCK_VEHICLES` | `true` | Usa o catálogo simulado |
+| `VITE_MOCK_VEHICLES` | `false` | `true` usa só o catálogo de exemplo, sem o banco |
+| `VITE_SUPABASE_URL` | URL do projeto | Endereço do Supabase |
+| `VITE_SUPABASE_KEY` | chave publicável | Chave pública do Supabase (pode ficar no site; quem protege os dados são as regras do banco) |
 | `VITE_MOCK_OPERACOES` | `true` | `false` usa o serviço de operações real |
 | `VITE_MOCK_CREDITO` | `true` | `false` lê as taxas por perfil do serviço de juros |
+| `VITE_MOCK_SCORE` | `true` | `false` usa o Score Engine real |
+| `VITE_SCORE_URL` | `http://localhost:8080` | Endereço do Score Engine |
 | `VITE_API_URL` | `http://localhost:8083` | Endereço do serviço de operações |
 | `VITE_JUROS_URL` | `http://localhost:3000` | Endereço do serviço de juros |
 
@@ -123,7 +149,7 @@ Referência completa dos campos, tipos e regras: [`docs/API.md`](docs/API.md).
 
 ## Contrato da API do AutoGiro
 
-O contrato do nosso próprio back-end está em [`docs/autogiro-api.openapi.yaml`](docs/autogiro-api.openapi.yaml) (OpenAPI 3.0). Abra em [editor.swagger.io](https://editor.swagger.io) para ver as rotas, os campos e os exemplos. Ele cobre catálogo, simulação, política de crédito, cliente, propostas, análise de crédito e contratação, e já está alinhado ao serviço de juros. Os trechos de Score e Decisão estão marcados como pendentes até o outro grupo enviar o contrato deles.
+O contrato do nosso próprio back-end está em [`docs/autogiro-api.openapi.yaml`](docs/autogiro-api.openapi.yaml) (OpenAPI 3.0). Abra em [editor.swagger.io](https://editor.swagger.io) para ver as rotas, os campos e os exemplos. Ele cobre catálogo, simulação, política de crédito, cliente, propostas, análise de crédito e contratação, e já está alinhado ao serviço de juros. O Score já está documentado com os campos reais; só a Decisão continua marcada como pendente até o contrato dela chegar.
 
 ## Decisões de projeto
 
@@ -134,10 +160,10 @@ O contrato do nosso próprio back-end está em [`docs/autogiro-api.openapi.yaml`
 
 ## Próximos passos
 
-- Ligar o catálogo de veículos ao Supabase e salvar as simulações.
+- Salvar as simulações no Supabase.
 - Login de clientes e criação de propostas a partir de uma simulação.
 - Telas de amortização antecipada e de liquidação da operação.
-- Integração com a esteira de crédito (score, decisão e juros) para analisar o financiamento antes da contratação.
+- Integração com a Decisão, assim que o contrato dela chegar, e com o serviço de juros para contratar a operação.
 
 ## Equipe
 

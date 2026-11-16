@@ -7,7 +7,7 @@ import { usePolitica } from "../hooks/usePolitica.js";
 import { useAsync } from "../hooks/useAsync.js";
 import { SimularFinanciamentoDialog } from "../components/vehicles/SimularFinanciamentoDialog.jsx";
 import { VehicleCard, FavoriteButton, CompareToggle } from "../components/vehicles/VehicleCard.jsx";
-import { VehicleArt } from "../components/vehicles/VehicleArt.jsx";
+import { VehiclePhoto } from "../components/vehicles/VehiclePhoto.jsx";
 import { CompareBar } from "../components/vehicles/CompareBar.jsx";
 import { Skeleton } from "../components/ui/Skeleton.jsx";
 import { StateMessage } from "../components/ui/StateMessage.jsx";
@@ -68,7 +68,10 @@ export default function VeiculoDetalhePage({ id }) {
           <>
             <article className="detail">
               <div>
-                <div className="hero-img"><VehicleArt category={v.category} color={v.color?.hex} label={`${nome}, cor ${v.color?.nome ?? "não informada"} (ilustração)`} /></div>
+                <figure className="hero-img">
+                  <VehiclePhoto vehicle={v} eager />
+                  {v.photo?.fonte && <figcaption>Foto ilustrativa do modelo: <a href={v.photo.fonte} target="_blank" rel="noopener noreferrer">{v.photo.credito || "fonte"}</a>{/commons\.wikimedia/.test(v.photo.fonte) && ", autor e licença na página"}</figcaption>}
+                </figure>
                 <header className="detail__head">
                   <div className="detail__tags"><span className="tag">{CATEGORY_LABELS[v.category]}</span>{reservado && <span className="tag tag--warn">Reservado</span>}</div>
                   <h1>{nome}</h1>
@@ -82,6 +85,7 @@ export default function VeiculoDetalhePage({ id }) {
                     ))}
                   </dl>
                 </section>
+                {v.description && <section aria-labelledby="desc"><h2 id="desc" className="h2">Sobre este veículo</h2><p className="muted pre-line">{v.description}</p></section>}
                 {v.opcionais?.length > 0 && (
                   <section aria-labelledby="opc">
                     <h2 id="opc" className="h2">Itens e opcionais</h2>
@@ -95,7 +99,7 @@ export default function VeiculoDetalhePage({ id }) {
                 <p className="buybox__price">{formatMoney(v.priceBRL)}</p>
                 {est && <p className="buybox__est">ou a partir de <strong>{formatMoney(est.primeiraParcela)}</strong>/mês<br /><span className="muted small">{ESTIMATIVA.meses}x, entrada de {formatMoney(entrada)}, perfil {ESTIMATIVA.faixa}</span></p>}
                 <button className="btn" type="button" disabled={reservado} onClick={() => setSimulando(true)}>{reservado ? "Indisponível" : "Simular financiamento"}</button>
-                <a className="btn btn--ghost" href="#/credito">Análise de crédito</a>
+                <a className="btn btn--ghost" href={`#/credito/${v.id}`}>Analisar meu crédito</a>
                 <div className="buybox__row"><CompareToggle id={v.id} nome={nome} /><Compartilhar nome={nome} /></div>
               </aside>
             </article>

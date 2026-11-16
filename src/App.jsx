@@ -10,8 +10,9 @@ const OperacoesPage = lazy(() => import("./pages/OperacoesPage.jsx"));
 const OperacaoDetalhePage = lazy(() => import("./pages/OperacaoDetalhePage.jsx"));
 const CreditoPage = lazy(() => import("./pages/CreditoPage.jsx"));
 const TermosPage = lazy(() => import("./pages/TermosPage.jsx"));
+const AdminPage = lazy(() => import("./pages/AdminPage.jsx"));
 
-const TITULOS = { veiculos: "Veículos", operacoes: "Minhas operações", credito: "Análise de crédito", termos: "Termos de uso" };
+const TITULOS = { veiculos: "Veículos", operacoes: "Minhas operações", credito: "Análise de crédito", termos: "Termos de uso", admin: "Área do lojista" };
 
 export default function App() {
   const [dataRef, setDataRef] = useState(todayISO());
@@ -22,8 +23,9 @@ export default function App() {
   const dec = id && decodeURIComponent(id);
   let content;
   if (isOp) content = dec ? <OperacaoDetalhePage id={dec} dataRef={dataRef} /> : <OperacoesPage dataRef={dataRef} />;
-  else if (page === "credito") content = <CreditoPage />;
+  else if (page === "credito") content = <CreditoPage key={dec ?? ""} veiculoId={dec} />;
   else if (page === "termos") content = <TermosPage />;
+  else if (page === "admin") content = <AdminPage />;
   else content = dec ? <VeiculoDetalhePage id={dec} /> : <VeiculosPage />;
 
   const cur = (p) => (page === p || (p === "veiculos" && !TITULOS[page]) ? "page" : undefined);
@@ -57,7 +59,7 @@ export default function App() {
         <div className="container footer__inner">
           <p><strong className="brand">AutoGiro</strong><br /><span className="muted small">Simulações ilustrativas. Sujeito à análise de crédito.</span></p>
           <nav aria-label="Rodapé" className="footer__nav">
-            <a href="#/veiculos">Veículos</a><a href="#/operacoes">Minhas operações</a><a href="#/credito">Crédito</a><a href="#/termos">Termos de uso</a>
+            <a href="#/veiculos">Veículos</a><a href="#/operacoes">Minhas operações</a><a href="#/credito">Crédito</a><a href="#/termos">Termos de uso</a><a href="#/admin">Área do lojista</a>
           </nav>
           <p className="small muted">© {new Date().getFullYear()} AutoGiro. Todos os direitos reservados.</p>
         </div>
