@@ -28,4 +28,13 @@ export const vehicleService = {
     if (env.MOCK_VEHICLES) return listMock(params);
     return http(ENDPOINTS.vehicles.list, { query: params, signal });
   },
+  async get(id, signal) {
+    if (env.MOCK_VEHICLES) {
+      await wait(400);
+      const v = VEHICLES_MOCK.find((x) => x.id === id);
+      if (!v) throw new ApiError("Veículo não encontrado.", { status: 404, code: "NOT_FOUND" });
+      return v;
+    }
+    return http(ENDPOINTS.vehicles.detail(id), { signal });
+  },
 };

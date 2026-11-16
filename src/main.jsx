@@ -3,6 +3,9 @@ import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 import "./styles/tokens.css";
 import "./styles/global.css";
+import { initRipple } from "./utils/ripple.js";
+
+initRipple();
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>

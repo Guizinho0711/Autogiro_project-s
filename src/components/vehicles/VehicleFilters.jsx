@@ -30,6 +30,15 @@ export function VehicleFilters({ filters, onChange, onClear }) {
           ))}
         </select>
       </div>
+      <div className="field">
+        <label htmlFor="f-sort">Ordenar por</label>
+        <select id="f-sort" value={filters.sort} onChange={set("sort")}>
+          <option value="menor_preco">Menor preço</option>
+          <option value="maior_preco">Maior preço</option>
+          <option value="mais_novo">Mais novos</option>
+          <option value="menor_km">Menor quilometragem</option>
+        </select>
+      </div>
       <button className="btn btn--ghost" type="button" onClick={onClear} disabled={!hasFilters}>
         Limpar filtros
       </button>

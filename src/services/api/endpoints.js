@@ -1,6 +1,6 @@
 // Endpoints do financial-operations-service (porta 8083) e do catálogo (ainda mock).
 export const ENDPOINTS = {
-  vehicles: { list: "/vehicles" }, // futuro
+  vehicles: { list: "/vehicles", detail: (id) => `/vehicles/${encodeURIComponent(id)}` }, // futuro
   operacoes: {
     list: "/operacoes",
     detail: (id) => `/operacoes/${encodeURIComponent(id)}`,

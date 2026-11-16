@@ -3,14 +3,21 @@ import { vehicleService } from "../services/vehicleService.js";
 import { useAsync } from "../hooks/useAsync.js";
 import { useDebounce } from "../hooks/useDebounce.js";
 import { VehicleFilters } from "../components/vehicles/VehicleFilters.jsx";
+import { SimularFinanciamentoDialog } from "../components/vehicles/SimularFinanciamentoDialog.jsx";
 import { VehicleCard } from "../components/vehicles/VehicleCard.jsx";
 import { VehicleCardSkeleton } from "../components/ui/Skeleton.jsx";
 import { StateMessage } from "../components/ui/StateMessage.jsx";
 
-const EMPTY_FILTERS = { search: "", category: "", maxPrice: "" };
+const EMPTY_FILTERS = { search: "", category: "", maxPrice: "", sort: "menor_preco" };
+const ORDEM = {
+  menor_preco: (a, b) => a.priceBRL - b.priceBRL, maior_preco: (a, b) => b.priceBRL - a.priceBRL,
+  mais_novo: (a, b) => b.year - a.year || a.mileageKm - b.mileageKm, menor_km: (a, b) => a.mileageKm - b.mileageKm,
+};
+const ordenar = (items, k) => [...items].sort(ORDEM[k] ?? ORDEM.menor_preco);
 
 export default function VeiculosPage() {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [simulando, setSimulando] = useState(null);
   const search = useDebounce(filters.search, 300);
 
   const { status, data, error, reload } = useAsync(
@@ -21,7 +28,7 @@ export default function VeiculosPage() {
   return (
     <main className="container">
         <section className="intro">
-          <h1>Encontre o veículo e simule o financiamento</h1>
+          <h1>Encontre seu próximo <span className="grad">seminovo</span> e simule o financiamento</h1>
           <p>Filtre o estoque, escolha um veículo e veja a parcela antes de falar com a gente.</p>
         </section>
 
@@ -57,11 +64,12 @@ export default function VeiculosPage() {
             <>
               <p className="count">{data.total} {data.total === 1 ? "veículo" : "veículos"}</p>
               <div className="grid">
-                {data.items.map((v) => <VehicleCard key={v.id} vehicle={v} />)}
+                {ordenar(data.items, filters.sort).map((v) => <VehicleCard key={v.id} vehicle={v} onSimular={setSimulando} />)}
               </div>
             </>
           )}
         </div>
+      {simulando && <SimularFinanciamentoDialog vehicle={simulando} onClose={() => setSimulando(null)} />}
       </main>
   );
 }

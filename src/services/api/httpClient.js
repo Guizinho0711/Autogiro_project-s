@@ -10,14 +10,14 @@ export class ApiError extends Error {
 }
 
 /** Cliente HTTP único: timeout, JSON e erros padronizados. */
-export async function http(path, { method = "GET", query, body, signal } = {}) {
-  const url = new URL(env.API_URL + path, window.location.origin);
+export async function http(path, { method = "GET", query, body, signal, baseUrl = env.API_URL, timeoutMs = env.REQUEST_TIMEOUT_MS } = {}) {
+  const url = new URL(baseUrl + path, window.location.origin);
   Object.entries(query ?? {}).forEach(([k, v]) => {
     if (v !== undefined && v !== "") url.searchParams.set(k, String(v));
   });
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), env.REQUEST_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   signal?.addEventListener("abort", () => controller.abort());
 
   try {

@@ -3,5 +3,6 @@ export const env = {
   MOCK_VEHICLES: import.meta.env.VITE_MOCK_VEHICLES !== "false",
   MOCK_OPERACOES: import.meta.env.VITE_MOCK_OPERACOES !== "false",
   API_URL: import.meta.env.VITE_API_URL ?? "http://localhost:8083",
+  ESTEIRA_URL: import.meta.env.VITE_ESTEIRA_URL ?? "https://credcasa-esteira-credito.onrender.com",
   REQUEST_TIMEOUT_MS: 10000,
 };

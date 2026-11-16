@@ -1,7 +1,7 @@
 import { CATEGORY_LABELS, FUEL_LABELS, TRANSMISSION_LABELS, formatBRL, formatKm } from "../../utils/format.js";
 
 /** @param {{ vehicle: import("../../services/api/contracts.js").Vehicle }} props */
-export function VehicleCard({ vehicle: v }) {
+export function VehicleCard({ vehicle: v, onSimular }) {
   const reserved = v.status === "reserved";
   return (
     <article className="card">
@@ -10,7 +10,7 @@ export function VehicleCard({ vehicle: v }) {
         {reserved && <span className="tag tag--muted">Reservado</span>}
       </div>
       <h3 className="card__title">
-        {v.brand} {v.model}
+        <a className="card__link" href={`#/veiculos/${v.id}`}>{v.brand} {v.model}</a>
       </h3>
       <p className="card__version">{v.version}</p>
       <p className="card__meta">
@@ -19,7 +19,7 @@ export function VehicleCard({ vehicle: v }) {
       <p className="card__city">{v.city}</p>
       <div className="card__bottom">
         <strong className="card__price">{formatBRL(v.priceBRL)}</strong>
-        <button className="btn btn--small" type="button" disabled={reserved}>
+        <button className="btn btn--small" type="button" disabled={reserved} onClick={() => onSimular(v)}>
           {reserved ? "Indisponível" : "Simular parcelas"}
         </button>
       </div>
