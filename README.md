@@ -2,7 +2,7 @@
 
 Plataforma web de **financiamento de veículos**: o cliente explora o estoque, simula as parcelas e acompanha as operações contratadas, com pagamentos, atrasos e encargos.
 
-O foco desta etapa é um **front-end completo e organizado**, já ligado a um back-end real de operações e com o banco de dados relacional modelado.
+O foco desta etapa é um **front-end completo e organizado**, com o banco de dados relacional modelado e ligado aos serviços dos outros grupos da turma (operações, score, juros e esteira de crédito). O que é do AutoGiro e o que é de cada grupo está em [Créditos](#créditos).
 
 ## Veja funcionando
 
@@ -17,7 +17,7 @@ Na versão publicada, o catálogo de veículos vem do banco de dados (Supabase) 
 - Vitrine com busca por marca ou modelo, categorias em um toque, preço máximo e ordenação.
 - **Favoritos** (ficam salvos no navegador) e **comparador** de até 3 veículos lado a lado.
 - Página de cada veículo com ficha técnica, opcionais, parcelas por prazo, veículos parecidos e botão de compartilhar.
-- **Simulador de financiamento**: entrada (atalhos de 0% a 40%), prazo de 12 a 60 meses, **perfil de crédito A a D** e sistema **PRICE** ou **SAC**. A taxa de cada perfil é a mesma da modalidade `VEICULOS` do serviço de juros (1,50% a 3,00% ao mês).
+- **Simulador de financiamento**: entrada (atalhos de 0% a 40%), prazo de 12 a 60 meses, **perfil de crédito A a D** e sistema **PRICE** ou **SAC**. A taxa de cada perfil vem da modalidade `VEICULOS` do serviço de juros do outro grupo (1,50% a 3,00% ao mês).
 - Seções de como funciona, tabela de taxas por perfil e perguntas frequentes.
 - Resultado na hora: parcela, valor financiado, total pago, total de juros e cronograma completo. Os cálculos são feitos em centavos inteiros, e a última parcela zera o saldo ao centavo.
 
@@ -33,9 +33,9 @@ Na versão publicada, o catálogo de veículos vem do banco de dados (Supabase) 
 - Formulário com cadastro, renda, dívidas e o financiamento desejado. Vindo da página de um veículo, o valor e a entrada já chegam preenchidos.
 - Envia para o **Score Engine** (`POST /api/v1/score/evaluate`) e mostra o score de 0 a 1000, a classificação, a chance de inadimplência e o que pesou em cada um dos 4 componentes.
 - Liga o score à faixa de juros (A a E) do serviço de juros e calcula a parcela real. O botão abre o simulador já com o perfil do cliente.
-- Sem o Score rodando (como no site publicado), o cálculo é feito no navegador com as mesmas regras do modelo `SCORE_PF v1.1.0`. A conta foi comparada com o código Java do Score em 5.000 casos, sem nenhuma diferença.
+- Sem o Score rodando (como no site publicado), o cálculo é feito no navegador reproduzindo as regras do modelo `SCORE_PF v1.1.0`, que são do grupo do Score. A conta foi comparada com o código Java deles em 5.000 casos, sem nenhuma diferença.
 
-### Minhas operações (integrado ao back-end)
+### Minhas operações (integrado ao serviço de operações do grupo FinOps)
 - Lista de operações com busca por número e filtro por situação (em dia, em atraso, inadimplente, liquidada).
 - Detalhe da operação em três abas: **Resumo** (saldo devedor, valor para quitar, taxas e CET), **Parcelas** (situação, atraso e encargos) e **Histórico** (linha do tempo).
 - **Pagamento de parcela** com confirmação e a divisão do valor entre multa, juros de mora, juros e amortização.
@@ -95,7 +95,7 @@ src/
 ## Tecnologias
 
 - **Front-end:** React 18 e Vite (JavaScript), CSS próprio, sem bibliotecas de interface.
-- **Back-end de operações:** [financial-operations-service](https://github.com/unicsul-finops/financial-operations-service) (Go, Gin e PostgreSQL), com contratos documentados em OpenAPI.
+- **Back-end de operações:** [financial-operations-service](https://github.com/unicsul-finops/financial-operations-service) (Go, Gin e PostgreSQL), do grupo de Operações Financeiras. O AutoGiro só consome a API.
 - **Banco do AutoGiro:** Supabase (PostgreSQL).
 - **Publicação:** Vercel, a partir deste repositório. A cada atualização enviada ao GitHub, o site é publicado de novo.
 
@@ -149,7 +149,7 @@ Abra `http://localhost:5173`. Com o `.env` padrão, tudo funciona com dados simu
 | Histórico | `GET /operacoes/:id/historico` |
 | Pagar parcela | `POST /operacoes/:id/parcelas/:numero/pagamentos` |
 
-Referência completa dos campos, tipos e regras: [`docs/API.md`](docs/API.md).
+Resumo dos campos, tipos e regras feito para o AutoGiro consumir a API: [`docs/API.md`](docs/API.md). O serviço e a documentação oficial são do grupo de Operações Financeiras, no [repositório deles](https://github.com/unicsul-finops/financial-operations-service).
 
 ## Contrato da API do AutoGiro
 
@@ -543,6 +543,35 @@ Dados que o Score Engine usa (bloco `perfilPF`). Os nomes seguem o contrato dele
 - Login de clientes e criação de propostas a partir de uma simulação.
 - Telas de amortização antecipada e de liquidação da operação.
 - Integração com a Decisão, assim que o contrato dela chegar, e com o serviço de juros para contratar a operação.
+
+## Créditos
+
+O AutoGiro é um dos serviços de um trabalho em que cada grupo da turma faz uma parte do financiamento. Integrar com os outros grupos faz parte do trabalho; o que é de cada um está abaixo.
+
+### Feito pelo AutoGiro
+
+- O site inteiro (React e Vite): vitrine, simuladores, página do veículo, área do lojista, análise de crédito, telas de operações e todo o visual.
+- O banco de dados no Supabase (tabelas, regras de acesso e o script em `docs/autogiro-schema.sql`).
+- O cálculo de PRICE e SAC do simulador.
+- O contrato da API do AutoGiro (`docs/autogiro-api.openapi.yaml`).
+- A proposta de esteira para veículos (`docs/esteira-veiculos/`) e os testes.
+
+### Serviços de outros grupos usados pelo AutoGiro
+
+| Serviço | Grupo e repositório | Como o AutoGiro usa |
+|---|---|---|
+| Operações financeiras (FinOps) | [unicsul-finops/financial-operations-service](https://github.com/unicsul-finops/financial-operations-service) | Lista, detalhe e pagamento de parcelas pela API. `docs/API.md` é um resumo da documentação deles. |
+| Score Engine | [viniciusgm25/Score-Engine](https://github.com/viniciusgm25/Score-Engine) | Análise de crédito pela API. No modo demonstração, o site reproduz as regras deles para calcular o score. |
+| Cálculo de juros | [gmelchert/calculo-juros-facul](https://github.com/gmelchert/calculo-juros-facul) | Taxas por perfil da modalidade `VEICULOS`, mostradas no simulador e na tabela de taxas. |
+| Esteira de crédito (CredCasa) | [Augustolopes213/credcasa-esteira-credito](https://github.com/Augustolopes213/credcasa-esteira-credito) | Consulta de propostas pela API. Em `docs/esteira-veiculos/` está uma sugestão de ajuste para veículos, enviada ao grupo; o código continua sendo deles. |
+| Decisão | Contrato ainda não recebido | Ainda não integrado. |
+
+### Materiais de terceiros
+
+- **Fotos dos veículos:** [Wikimedia Commons](https://commons.wikimedia.org), com licenças livres. Cada foto tem link para a página com o autor e a licença.
+- **Fonte:** IBM Plex Sans (licença SIL Open Font), embutida pelo pacote `@fontsource/ibm-plex-sans`.
+- **Página do contrato:** Swagger UI (licença Apache 2.0), pelo pacote `swagger-ui-dist`.
+- **Bibliotecas:** React, Vite e o cliente do Supabase, todas de código aberto.
 
 ## Equipe
 

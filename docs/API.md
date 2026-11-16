@@ -1,6 +1,8 @@
 # financial-operations-service: referência da API
 
-Gerada a partir do `api/openapi.yaml` do repositório. Base local: `http://localhost:8083`. Documentação interativa: `/swagger`.
+> **Este serviço não é do AutoGiro.** O `financial-operations-service` foi desenvolvido pelo grupo de Operações Financeiras ([unicsul-finops/financial-operations-service](https://github.com/unicsul-finops/financial-operations-service)). Este arquivo é só um resumo que o AutoGiro fez para consumir a API, montado a partir do `api/openapi.yaml` do repositório deles. A fonte oficial é sempre o repositório original.
+
+Base local: `http://localhost:8083`. Documentação interativa: `/swagger`.
 
 ## Convenções
 
