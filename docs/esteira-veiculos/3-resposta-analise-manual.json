@@ -1,0 +1,212 @@
+{
+  "ok": true,
+  "idFinanciamento": "FIN-1794847717971-DDB7A4",
+  "status": "PENDENTE_ANALISE_MANUAL",
+  "mensagem": "Financiamento pendente de análise manual.",
+  "pedido": {
+    "idFinanciamento": "FIN-1794847717971-DDB7A4",
+    "status": "PENDENTE_ANALISE_MANUAL",
+    "criadoEm": "2026-11-16T16:48:37.971Z",
+    "atualizadoEm": "2026-11-16T16:48:37.983Z",
+    "entrada": {
+      "cliente": {
+        "nome": "Cliente Teste",
+        "tipoPessoa": "PF",
+        "cpf": "52998224725",
+        "rendaMensal": 8500,
+        "dividaTotal": 3000,
+        "idade": 34,
+        "estadoCivil": "CASADO",
+        "numeroDependentes": 1,
+        "diasAtrasoUltimos12Meses": 20,
+        "limiteRotativoUtilizado": 3500,
+        "limiteRotativoTotal": 6000,
+        "mesesNoEmpregoAtual": 14,
+        "mesesRelacionamentoBanco": 48
+      },
+      "veiculo": {
+        "id": "e4b8c1d2-0000-4000-8000-000000000003",
+        "marca": "Toyota",
+        "modelo": "Corolla",
+        "versao": "2.0 XEi",
+        "ano": 2020,
+        "valor": 109900,
+        "entrada": 21980
+      },
+      "produtoId": "VEICULO-SAC",
+      "prazoMeses": 48,
+      "dataLiberacao": "2026-11-16",
+      "primeiroRelacionamento": false
+    },
+    "produtos": {
+      "produtos": [
+        {
+          "id": "IMOVEL-SAC",
+          "nome": "Financiamento Imobiliário SAC",
+          "sistema": "SAC"
+        },
+        {
+          "id": "IMOVEL-PRICE",
+          "nome": "Financiamento Imobiliário PRICE",
+          "sistema": "PRICE"
+        },
+        {
+          "id": "VEICULO-PRICE",
+          "nome": "Financiamento de Veículo PRICE",
+          "sistema": "PRICE",
+          "modalidade": "VEICULOS",
+          "prazoMinMeses": 12,
+          "prazoMaxMeses": 60
+        },
+        {
+          "id": "VEICULO-SAC",
+          "nome": "Financiamento de Veículo SAC",
+          "sistema": "SAC",
+          "modalidade": "VEICULOS",
+          "prazoMinMeses": 12,
+          "prazoMaxMeses": 60
+        }
+      ]
+    },
+    "produtoEscolhido": {
+      "id": "VEICULO-SAC",
+      "nome": "Financiamento de Veículo SAC",
+      "sistema": "SAC",
+      "modalidade": "VEICULOS",
+      "prazoMinMeses": 12,
+      "prazoMaxMeses": 60
+    },
+    "scoreSolicitacao": {
+      "tipoPessoa": "PF",
+      "identificador": "FIN-1794847717971-DDB7A4",
+      "valor": 87920,
+      "modalidade": "VEICULOS",
+      "prazoMeses": 48,
+      "amortizacao": "SAC",
+      "dataLiberacao": "2026-11-16",
+      "primeiroRelacionamento": false,
+      "perfilPF": {
+        "cpf": "52998224725",
+        "rendaMensal": 8500,
+        "dividaTotal": 3000,
+        "idade": 34,
+        "estadoCivil": "CASADO",
+        "numeroDependentes": 1,
+        "diasAtrasoUltimos12Meses": 20,
+        "limiteRotativoUtilizado": 3500,
+        "limiteRotativoTotal": 6000,
+        "mesesNoEmpregoAtual": 14,
+        "mesesRelacionamentoBanco": 48
+      }
+    },
+    "score": {
+      "clienteId": "52998224725",
+      "tipoPessoa": "PF",
+      "scoreFinal": 560,
+      "faixaRisco": "BOM",
+      "probabilidadeDefault": 0.044,
+      "modelo": {
+        "codigo": "SCORE_PF",
+        "versao": "v1.1.0"
+      },
+      "calculatedAt": "2026-11-16T16:48:37.977Z",
+      "origem": "CALCULO",
+      "componentes": [
+        {
+          "nome": "Histórico de Pagamento",
+          "pontuacao": 400,
+          "pontuacaoMaxima": 1000,
+          "pesoPonderado": 0.35,
+          "motivo": "Atrasos operacionais recorrentes identificados nos últimos 12 meses."
+        },
+        {
+          "nome": "Capacidade Financeira",
+          "pontuacao": 650,
+          "pontuacaoMaxima": 1000,
+          "pesoPonderado": 0.3,
+          "motivo": "Comprometimento financeiro compatível com a estabilidade de renda declarada."
+        },
+        {
+          "nome": "Endividamento e Limites",
+          "pontuacao": 600,
+          "pontuacaoMaxima": 1000,
+          "pesoPonderado": 0.2,
+          "motivo": "Utilização regular das linhas concedidas de cartão e cheque especial."
+        },
+        {
+          "nome": "Estabilidade e Relacionamento",
+          "pontuacao": 700,
+          "pontuacaoMaxima": 1000,
+          "pesoPonderado": 0.15,
+          "motivo": "Vínculo empregatício (14 meses) e relacionamento bancário (48 meses)."
+        }
+      ],
+      "fatoresImpacto": [
+        "Atrasos operacionais recorrentes identificados nos últimos 12 meses.",
+        "Comprometimento financeiro compatível com a estabilidade de renda declarada.",
+        "Utilização regular das linhas concedidas de cartão e cheque especial.",
+        "Vínculo empregatício (14 meses) e relacionamento bancário (48 meses)."
+      ],
+      "identificador": "FIN-1794847717971-DDB7A4",
+      "valor": 87920,
+      "modalidade": "VEICULOS",
+      "prazoMeses": 48,
+      "amortizacao": "SAC",
+      "dataLiberacao": "2026-11-16",
+      "primeiroRelacionamento": false
+    },
+    "decisao": {
+      "status": "ANALISE_MANUAL",
+      "motivo": "Encaminhado para revisão manual pelo serviço simulado.",
+      "integracaoJuros": null,
+      "mock": true
+    },
+    "integracaoJuros": null,
+    "simulacao": null,
+    "operacao": null,
+    "etapas": [
+      {
+        "etapa": "PRODUTOS",
+        "status": "INICIADA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:37.971Z"
+      },
+      {
+        "etapa": "PRODUTOS",
+        "status": "CONCLUIDA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:37.974Z"
+      },
+      {
+        "etapa": "SCORE",
+        "status": "INICIADA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:37.974Z"
+      },
+      {
+        "etapa": "SCORE",
+        "status": "CONCLUIDA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:37.978Z"
+      },
+      {
+        "etapa": "DECISAO",
+        "status": "INICIADA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:37.978Z"
+      },
+      {
+        "etapa": "DECISAO",
+        "status": "CONCLUIDA",
+        "detalhe": null,
+        "em": "2026-11-16T16:48:37.983Z"
+      },
+      {
+        "etapa": "ESTEIRA",
+        "status": "PENDENTE",
+        "detalhe": "Decisão solicitou ANÁLISE MANUAL. Operação aguarda revisão.",
+        "em": "2026-11-16T16:48:37.983Z"
+      }
+    ]
+  }
+}

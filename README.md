@@ -153,6 +153,8 @@ O contrato do nosso back-end está em [`docs/autogiro-api.openapi.yaml`](docs/au
 
 **[Abrir o contrato interativo (Swagger)](https://autogiroproject-s.vercel.app/contrato/)** · [Baixar o YAML](docs/autogiro-api.openapi.yaml)
 
+**Esteira de crédito para veículos (CredCasa):** proposta de contrato e JSONs reais de requisição e resposta em [`docs/esteira-veiculos/`](docs/esteira-veiculos/README.md).
+
 ### Fluxo entre os serviços
 
 ```mermaid

@@ -94,13 +94,42 @@ function SemPermissao({ sessao }) {
   );
 }
 
+const chaveRascunho = (id) => `autogiro:rascunho-veiculo:${id ?? "novo"}`;
+const lerRascunho = (id) => { try { return JSON.parse(localStorage.getItem(chaveRascunho(id))); } catch { return null; } };
+const gravarRascunho = (id, f) => { try { localStorage.setItem(chaveRascunho(id), JSON.stringify(f)); } catch { /* sem armazenamento */ } };
+const apagarRascunho = (id) => { try { localStorage.removeItem(chaveRascunho(id)); } catch { /* sem armazenamento */ } };
+const iguais = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
 function Formulario({ inicial, onSalvo, onCancelar }) {
-  const [f, setF] = useState(inicial);
+  // Começa pelo rascunho guardado, se houver: nada se perde ao recarregar ou fechar a aba.
+  const [f, setF] = useState(() => ({ ...inicial, ...(lerRascunho(inicial.id) ?? {}) }));
+  const [recuperado, setRecuperado] = useState(() => !!lerRascunho(inicial.id));
+  const primeira = useRef(true);
+  const alterado = !iguais(f, inicial);
   const [erros, setErros] = useState({});
   const [st, setSt] = useState({ status: "idle" });
   const [enviandoFoto, setEnviandoFoto] = useState(false);
   const topo = useRef(null);
-  useEffect(() => { setF(inicial); setErros({}); setSt({ status: "idle" }); topo.current?.scrollIntoView({ block: "start" }); }, [inicial]);
+  // Trocou o veículo em edição (ou voltou para "novo"): carrega o rascunho dele, se existir.
+  useEffect(() => {
+    if (primeira.current) { primeira.current = false; return; }
+    const r = lerRascunho(inicial.id);
+    setF({ ...inicial, ...(r ?? {}) }); setRecuperado(!!r); setErros({}); setSt({ status: "idle" });
+    topo.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }, [inicial]);
+  // Guarda o rascunho meio segundo depois da última tecla.
+  useEffect(() => {
+    const t = setTimeout(() => (alterado ? gravarRascunho(inicial.id, f) : apagarRascunho(inicial.id)), 500);
+    return () => clearTimeout(t);
+  }, [f, alterado, inicial.id]);
+  // Pergunta antes de fechar a aba ou recarregar com alterações não salvas.
+  useEffect(() => {
+    if (!alterado) return;
+    const aviso = (e) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", aviso);
+    return () => window.removeEventListener("beforeunload", aviso);
+  }, [alterado]);
+  const descartar = () => { apagarRascunho(inicial.id); setF(inicial); setRecuperado(false); setErros({}); };
   const set = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
   const previa = { brand: f.brand || "Marca", model: f.model || "Modelo", version: f.version, category: f.category, color: f.cor ? { hex: CORES[f.cor] } : null, photo: f.fotoUrl ? { url: f.fotoUrl } : null };
 
@@ -122,7 +151,11 @@ function Formulario({ inicial, onSalvo, onCancelar }) {
     setErros(v.erros ?? {});
     if (v.erros) { document.getElementById(`v-${Object.keys(v.erros)[0]}`)?.focus(); return; }
     setSt({ status: "loading" });
-    try { const salvo = await adminService.salvar(v.veiculo); setSt({ status: "ok" }); onSalvo(salvo, !f.id); }
+    try {
+      const salvo = await adminService.salvar(v.veiculo);
+      apagarRascunho(inicial.id); setRecuperado(false); setF(inicial); setSt({ status: "ok" });
+      onSalvo(salvo, !f.id);
+    }
     catch (err) { setSt({ status: "error", msg: err.message }); }
   };
 
@@ -142,8 +175,13 @@ function Formulario({ inicial, onSalvo, onCancelar }) {
     <form className="panel credit-form" onSubmit={salvar} noValidate ref={topo} aria-labelledby="vf-t">
       <div className="credit-form__head">
         <h2 id="vf-t" className="h2 h2--flush">{f.id ? `Editar ${inicial.brand} ${inicial.model}` : "Cadastrar veículo"}</h2>
-        {f.id && <button type="button" className="btn btn--ghost btn--small" onClick={onCancelar}>Cancelar edição</button>}
+        <div className="form-head-actions">
+          {alterado && <span className="draft-tag" title="Fica guardado neste navegador até você salvar">Rascunho guardado</span>}
+          {alterado && <button type="button" className="link-btn" onClick={descartar}>Descartar</button>}
+          {f.id && <button type="button" className="btn btn--ghost btn--small" onClick={onCancelar}>Cancelar edição</button>}
+        </div>
       </div>
+      {recuperado && alterado && <p className="alert alert--ok draft-note" role="status">Recuperamos o que você estava preenchendo. Continue de onde parou ou toque em Descartar.</p>}
       <div className="admin-form">
         <div className="admin-form__photo">
           <div className="card__media"><VehiclePhoto vehicle={previa} /></div>
@@ -239,14 +277,18 @@ export default function AdminPage() {
 
   useEffect(() => {
     let sub;
-    adminService.sessao().then(setSessao, (e) => { setFalha(e.message); setSessao(null); });
-    adminService.aoMudarSessao((s) => setSessao(s ?? null)).then((s) => { sub = s; }, () => {});
+    // O Supabase renova o token sozinho (por exemplo, quando você volta para a aba). Para a tela,
+    // só importa se a PESSOA mudou: com o mesmo usuário, mantemos o objeto antigo e nada é recriado.
+    const atualizar = (s) => setSessao((atual) => (s && atual && atual.user.id === s.user.id ? atual : s ?? null));
+    adminService.sessao().then(atualizar, (e) => { setFalha(e.message); setSessao(null); });
+    adminService.aoMudarSessao(atualizar).then((s) => { sub = s; }, () => {});
     return () => sub?.unsubscribe();
   }, []);
+  const userId = sessao?.user?.id;
   useEffect(() => {
     setAdmin(null);
-    if (sessao) adminService.ehAdmin(sessao.user.id).then(setAdmin, (e) => { setFalha(e.message); setAdmin(false); });
-  }, [sessao]);
+    if (userId) adminService.ehAdmin(userId).then(setAdmin, (e) => { setFalha(e.message); setAdmin(false); });
+  }, [userId]);
   const carregar = () => adminService.listar().then(setItens, (e) => setFalha(e.message));
   useEffect(() => { if (admin) carregar(); }, [admin]);
 

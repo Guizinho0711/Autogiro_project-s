@@ -1,0 +1,30 @@
+{
+  "cliente": {
+    "nome": "Cliente Teste",
+    "tipoPessoa": "PF",
+    "cpf": "52998224725",
+    "rendaMensal": 8500,
+    "dividaTotal": 1200,
+    "idade": 34,
+    "estadoCivil": "CASADO",
+    "numeroDependentes": 1,
+    "diasAtrasoUltimos12Meses": 0,
+    "limiteRotativoUtilizado": 1500,
+    "limiteRotativoTotal": 6000,
+    "mesesNoEmpregoAtual": 36,
+    "mesesRelacionamentoBanco": 48
+  },
+  "veiculo": {
+    "id": "e4b8c1d2-0000-4000-8000-000000000003",
+    "marca": "Toyota",
+    "modelo": "Corolla",
+    "versao": "2.0 XEi",
+    "ano": 2020,
+    "valor": 109900,
+    "entrada": 21980
+  },
+  "produtoId": "VEICULO-PRICE",
+  "prazoMeses": 48,
+  "dataLiberacao": "2026-11-16",
+  "primeiroRelacionamento": false
+}

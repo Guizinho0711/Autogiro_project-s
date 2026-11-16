@@ -1,0 +1,9 @@
+{
+  "ok": false,
+  "erro": "Dados inválidos.",
+  "detalhes": [
+    "cliente.cpf deve conter 11 números, sem pontuação",
+    "veiculo.marca é obrigatório",
+    "prazoMeses deve ficar entre 12 e 60 para veículos"
+  ]
+}
