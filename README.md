@@ -546,4 +546,4 @@ Dados que o Score Engine usa (bloco `perfilPF`). Os nomes seguem o contrato dele
 
 ## Equipe
 
-Preencha com os nomes dos integrantes e a instituição.
+Guilherme Camargos - Universidade Cruzeiro do Sul - Polo Analia Franco.
