@@ -454,6 +454,82 @@ Dados que o Score Engine usa (bloco `perfilPF`). Os nomes seguem o contrato dele
 </details>
 <!-- API:FIM -->
 
+## Testes
+
+Última rodada: **16/11/2026**, depois do novo visual (PR #3). Os testes rodam no navegador (Playwright), no celular e no computador, nos temas claro e escuro.
+
+| Testes | Passaram de primeira | Corrigidos e aprovados | Não verificados |
+|---:|---:|---:|---:|
+| **37** | 28 | 6 | 3 |
+
+"Corrigido" é um problema que a rodada encontrou, foi consertado e passou no reteste. "Não verificado" é o que o ambiente de teste não conseguia alcançar (o site publicado, o Wikimedia e o Score em Java).
+
+![Testes por área: barras empilhadas com os testes que passaram, foram corrigidos ou não foram verificados em cada área](docs/testes/testes-por-area.png)
+
+| Área | Passou | Corrigido | Não verificado | Total |
+|---|---:|---:|---:|---:|
+| Responsividade | 0 | 1 | 0 | 1 |
+| Acessibilidade | 0 | 3 | 0 | 3 |
+| Estabilidade | 2 | 0 | 0 | 2 |
+| Simulador | 3 | 0 | 0 | 3 |
+| Visual | 1 | 2 | 0 | 3 |
+| Movimento | 2 | 0 | 0 | 2 |
+| Navegação | 1 | 0 | 0 | 1 |
+| Vitrine | 3 | 0 | 1 | 4 |
+| Banco | 3 | 0 | 0 | 3 |
+| Lojista | 7 | 0 | 0 | 7 |
+| Crédito | 3 | 0 | 1 | 4 |
+| Operações | 1 | 0 | 0 | 1 |
+| Documentação | 1 | 0 | 0 | 1 |
+| Desempenho | 1 | 0 | 0 | 1 |
+| Publicação | 0 | 0 | 1 | 1 |
+| **Total** | **28** | **6** | **3** | **37** |
+
+<details>
+<summary><strong>Ver os 37 testes, um por um</strong></summary>
+
+| Área | Teste | Resultado | Situação | Observação |
+|---|---|---|---|---|
+| Responsividade | Sem rolagem lateral em 5 larguras (320 a 1440 px) e 9 telas | 45 combinações sem estouro | Corrigido | Em 320 px o cabeçalho passava 3 px da tela. Ajustado e testado de novo. |
+| Acessibilidade | Regras WCAG 2.1 AA (axe) no tema escuro, 8 telas | 0 ocorrências | Corrigido | Antes: 20 textos secundários com contraste 3,5:1 (mínimo 4,5:1). |
+| Acessibilidade | Regras WCAG 2.1 AA (axe) no tema claro, 8 telas | 0 ocorrências | Corrigido | Antes: 20 textos secundários com contraste 3,6:1. |
+| Acessibilidade | Atalho "Pular para o conteúdo" pelo teclado | Vai ao conteúdo sem trocar de página | Corrigido | Antes, levava para a página inicial. |
+| Estabilidade | Erros de JavaScript no tema escuro (8 telas) | 0 erros | Passou |  |
+| Estabilidade | Erros de JavaScript no tema claro (8 telas) | 0 erros | Passou |  |
+| Simulador | Simulador rápido igual ao cálculo, em 4 combinações | Iguais ao centavo | Passou | 90 mil/20%/48x/B; 15 mil/0%/12x/A; 250 mil/60%/60x/D; 120 mil/35%/36x/C. |
+| Simulador | Botão "Ver veículos até" filtra o estoque | Filtro até R$ 100.000 para R$ 90.000 | Passou |  |
+| Simulador | Simulador completo (PRICE e SAC por perfil) | CG 150, perfil D, SAC: R$ 483,93 | Passou | Conferido na mão. |
+| Visual | Troca de tema (sistema, claro, escuro) e fica salva | Funcionando | Passou |  |
+| Visual | Botão de favorito no canto da foto | No canto | Corrigido | Ficava no meio da foto. |
+| Visual | Nenhum roxo restante no código | 0 ocorrências | Corrigido | O desenho padrão de carro sem foto era roxo. |
+| Movimento | Transição entre telas (View Transitions) | Funcionando | Passou |  |
+| Movimento | "Reduzir movimento" do sistema desliga as animações | Desligadas | Passou |  |
+| Navegação | Links internos abrem página com título | 21 de 21 | Passou |  |
+| Vitrine | Busca, categorias e favoritos | 2 favoritos filtrados | Passou |  |
+| Vitrine | Comparador (máximo de 3) | 3 marcados, 13 bloqueados | Passou |  |
+| Vitrine | Página do veículo e veículos parecidos | 2 parecidos | Passou |  |
+| Vitrine | Fotos reais do Wikimedia | Testado com foto simulada | Não verificado | O ambiente de teste não alcança o Wikimedia; conferido à mão no site publicado. |
+| Banco | Catálogo lido do Supabase, com fotos | 16 veículos, 16 fotos | Passou |  |
+| Banco | Banco fora do ar | Catálogo de exemplo com aviso | Passou |  |
+| Banco | Regras de acesso com 1 veículo oculto | Visitante 15, logado 15, administrador 16 | Passou |  |
+| Lojista | Login com validação | Funcionando | Passou |  |
+| Lojista | Cadastro com foto enviada ao Storage | Funcionando | Passou |  |
+| Lojista | Editar, mudar situação e excluir | Funcionando | Passou |  |
+| Lojista | Troca de aba com o login renovado 4 vezes; rascunho | Dados mantidos e rascunho recuperado | Passou |  |
+| Lojista | Painel: indicadores batem com o estoque | 16 na vitrine, 1 reservado | Passou |  |
+| Lojista | Painel: gráfico por categoria soma o total | 4 + 3 + 3 + 3 + 3 = 16 | Passou |  |
+| Lojista | Filtro por situação na lista | 1 reservado | Passou |  |
+| Crédito | Validação do formulário | 6 campos apontados, foco no primeiro | Passou |  |
+| Crédito | Análise: score, perfil e parcela | 872, perfil A, R$ 2.582,65 | Passou |  |
+| Crédito | Conta do Score igual à do Java | 5.000 casos, 0 diferenças | Passou |  |
+| Crédito | Score Engine Java rodando de verdade | Não executado no ambiente de teste | Não verificado | O Maven estava bloqueado no ambiente de teste. |
+| Operações | Lista, detalhe da operação e Termos de uso | Funcionando | Passou |  |
+| Documentação | Swagger (/contrato/) | 16 rotas, sem erros | Passou |  |
+| Desempenho | Tamanho ao abrir o site | 56,5 KB de JS e CSS (gzip) + 69 KB de fonte | Passou | As outras telas carregam só quando abertas. |
+| Publicação | Site publicado aberto no navegador | Não verificado pelo ambiente de teste | Não verificado | A conferir no navegador após o merge do PR #3. |
+
+</details>
+
 ## Decisões de projeto
 
 - **Dinheiro sem erro de arredondamento:** o simulador calcula em centavos inteiros, e a API usa decimais exatos.
