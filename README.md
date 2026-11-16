@@ -492,7 +492,7 @@ Dados que o Score Engine usa (bloco `perfilPF`). Os nomes seguem o contrato dele
 
 ### Última rodada: 16/11/2026, das 16:02 às 16:04 (horário de Brasília)
 
-Depois do pedido completo, da tela Conexões e de antecipar e quitar (PR #6). Tudo rodou no navegador (Playwright), com o Score, a Decisão e o serviço de juros rodando de verdade em `localhost`. O serviço de juros usa o código de cálculo do grupo de Juros.
+Depois do pedido completo, da tela Conexões e de antecipar e quitar (PR #6). Tudo rodou no navegador (Playwright), com uma cadeia Score → Decisão → Juros rodando em `localhost`. O serviço de juros usa o código de cálculo do grupo de Juros; o Score e a Decisão são versões de teste no formato dos grupos, porque os originais (Java e Go) não rodam no ambiente de teste.
 
 | Bateria | Testes | Passaram |
 |---|---:|---:|
