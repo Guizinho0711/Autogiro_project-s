@@ -10,7 +10,7 @@ export function fromRow(r) {
   return {
     id: r.id, brand: r.marca, model: r.modelo, version: r.versao ?? "", year: r.ano, mileageKm: r.quilometragem,
     priceBRL: Number(r.preco), category: r.categoria, fuel: r.combustivel, transmission: r.cambio, city: r.cidade,
-    status: STATUS_TELA[r.status] ?? "available", color: r.cor ? { nome: r.cor, hex: CORES[r.cor] ?? "#6d28d9" } : null,
+    status: STATUS_TELA[r.status] ?? "available", color: r.cor ? { nome: r.cor, hex: CORES[r.cor] ?? "#6b6d72" } : null,
     opcionais: r.opcionais ?? [], description: r.descricao ?? "",
     photo: r.foto_url ? { url: r.foto_url, credito: r.foto_credito, fonte: r.foto_fonte_url } : null,
     createdAt: r.created_at,

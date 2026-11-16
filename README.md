@@ -25,6 +25,7 @@ Na versão publicada, o catálogo de veículos vem do banco de dados (Supabase) 
 - Página `#/admin`, com login do Supabase. Só contas da tabela `administradores` conseguem cadastrar; quem tenta sem permissão é barrado pelo próprio banco (RLS).
 - Cadastro, edição e exclusão de veículos, com envio de foto (reduzida no navegador e guardada no Supabase Storage), cor, opcionais e descrição.
 - Situação de cada veículo: disponível, reservado, vendido ou oculto. Vendido e oculto saem da vitrine, mas continuam no banco.
+- Painel com o resumo do estoque: veículos na vitrine, reservados, vendidos, ocultos, valor total e preço médio, gráfico por categoria e últimos cadastrados. A lista filtra por situação.
 
 **Como liberar um administrador:** crie a conta em `#/admin`, confirme o e-mail e entre. A página mostra um comando `insert into public.administradores ...` com o seu ID. Rode esse comando no SQL Editor do Supabase e recarregue.
 
@@ -42,7 +43,10 @@ Na versão publicada, o catálogo de veículos vem do banco de dados (Supabase) 
 
 ### Qualidade da interface
 - Estados de carregamento (skeletons), erro (com "Tentar de novo") e lista vazia em todas as telas.
-- Responsivo, com modo claro e escuro automático, navegação por teclado e rótulos de acessibilidade.
+- Visual monocromático (grafite e branco), fonte IBM Plex Sans embutida e tema claro, escuro ou automático, com botão de troca.
+- Simulador rápido na página inicial: arraste valor, entrada e prazo e a parcela muda na hora.
+- Transições suaves entre telas (View Transitions), diálogos animados e seções que entram com a rolagem; tudo desligado quando o sistema pede menos movimento.
+- Responsivo de 320 px a telas grandes, navegação por teclado e regras de acessibilidade WCAG 2.1 AA conferidas automaticamente (axe), nos dois temas.
 - Reenvio seguro de pagamentos: cada tentativa leva um identificador próprio para evitar duplicidade.
 
 ### Banco de dados

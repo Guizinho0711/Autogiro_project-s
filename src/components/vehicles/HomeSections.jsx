@@ -8,10 +8,10 @@ const PASSOS = [
 
 export function ComoFunciona() {
   return (
-    <section className="section" aria-labelledby="como">
+    <section className="section reveal" aria-labelledby="como">
       <h2 id="como" className="section__title">Como funciona</h2>
       <ol className="steps">
-        {PASSOS.map(([t, d], i) => <li key={t} className="step"><span className="step__n" aria-hidden="true">{i + 1}</span><h3>{t}</h3><p className="muted">{d}</p></li>)}
+        {PASSOS.map(([t, d], i) => <li key={t} className="step"><span className="step__n" aria-hidden="true">Etapa {i + 1}</span><h3>{t}</h3><p className="muted">{d}</p></li>)}
       </ol>
     </section>
   );
@@ -21,7 +21,7 @@ export function TaxasPorPerfil({ politica }) {
   if (!politica) return null;
   const ex = { valor: 50000, meses: 48 };
   return (
-    <section className="section" aria-labelledby="taxas">
+    <section className="section reveal" aria-labelledby="taxas">
       <h2 id="taxas" className="section__title">Taxas por perfil de crédito</h2>
       <p className="muted section__lead">A taxa depende do score na análise de crédito. Aqui estão as faixas da modalidade de veículos, com prazo de {politica.prazoMinMeses} a {politica.prazoMaxMeses} meses.</p>
       <div className="wide">
@@ -52,7 +52,7 @@ const PERGUNTAS = [
 
 export function Faq() {
   return (
-    <section className="section" aria-labelledby="faq">
+    <section className="section reveal" aria-labelledby="faq">
       <h2 id="faq" className="section__title">Perguntas frequentes</h2>
       <div className="faq">{PERGUNTAS.map(([q, a]) => <details key={q}><summary>{q}</summary><p className="muted">{a}</p></details>)}</div>
     </section>
