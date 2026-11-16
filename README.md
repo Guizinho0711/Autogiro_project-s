@@ -13,8 +13,11 @@ A versão publicada usa dados simulados (mock) para veículos e operações, por
 ## O que foi feito
 
 ### Veículos e simulador
-- Catálogo com busca por marca ou modelo e filtros por categoria e preço máximo.
-- **Simulador de financiamento** em cada veículo: entrada (com atalhos de 0%, 10%, 20% e 30%), prazo de 12 a 60 meses, taxa de juros e sistema **PRICE** ou **SAC**.
+- Vitrine com busca por marca ou modelo, categorias em um toque, preço máximo e ordenação.
+- **Favoritos** (ficam salvos no navegador) e **comparador** de até 3 veículos lado a lado.
+- Página de cada veículo com ficha técnica, opcionais, parcelas por prazo, veículos parecidos e botão de compartilhar.
+- **Simulador de financiamento**: entrada (atalhos de 0% a 40%), prazo de 12 a 60 meses, **perfil de crédito A a D** e sistema **PRICE** ou **SAC**. A taxa de cada perfil é a mesma da modalidade `VEICULOS` do serviço de juros (1,50% a 3,00% ao mês).
+- Seções de como funciona, tabela de taxas por perfil e perguntas frequentes.
 - Resultado na hora: parcela, valor financiado, total pago, total de juros e cronograma completo. Os cálculos são feitos em centavos inteiros, e a última parcela zera o saldo ao centavo.
 
 ### Minhas operações (integrado ao back-end)
@@ -102,7 +105,9 @@ Abra `http://localhost:5173`. Com o `.env` padrão, tudo funciona com dados simu
 |---|---|---|
 | `VITE_MOCK_VEHICLES` | `true` | Usa o catálogo simulado |
 | `VITE_MOCK_OPERACOES` | `true` | `false` usa o serviço de operações real |
+| `VITE_MOCK_CREDITO` | `true` | `false` lê as taxas por perfil do serviço de juros |
 | `VITE_API_URL` | `http://localhost:8083` | Endereço do serviço de operações |
+| `VITE_JUROS_URL` | `http://localhost:3000` | Endereço do serviço de juros |
 
 ## Integração com o serviço de operações
 
@@ -115,6 +120,10 @@ Abra `http://localhost:5173`. Com o `.env` padrão, tudo funciona com dados simu
 | Pagar parcela | `POST /operacoes/:id/parcelas/:numero/pagamentos` |
 
 Referência completa dos campos, tipos e regras: [`docs/API.md`](docs/API.md).
+
+## Contrato da API do AutoGiro
+
+O contrato do nosso próprio back-end está em [`docs/autogiro-api.openapi.yaml`](docs/autogiro-api.openapi.yaml) (OpenAPI 3.0). Abra em [editor.swagger.io](https://editor.swagger.io) para ver as rotas, os campos e os exemplos. Ele cobre catálogo, simulação, política de crédito, cliente, propostas, análise de crédito e contratação, e já está alinhado ao serviço de juros. Os trechos de Score e Decisão estão marcados como pendentes até o outro grupo enviar o contrato deles.
 
 ## Decisões de projeto
 

@@ -29,10 +29,11 @@ export async function http(path, { method = "GET", query, body, signal, baseUrl 
     });
     const data = await res.json().catch(() => null);
     if (!res.ok) {
-      throw new ApiError(data?.erro ?? data?.message ?? "Não foi possível concluir a solicitação.", {
-        status: res.status,
-        code: data?.code,
-      });
+      // Os serviços respondem de dois jeitos: {erro:"texto"} (operações) e
+      // {erro:{codigo,mensagem,detalhes}} (juros). Aceitamos os dois.
+      const e = data?.erro;
+      const message = (typeof e === "string" ? e : e?.mensagem) ?? data?.message ?? "Não foi possível concluir a solicitação.";
+      throw new ApiError(message, { status: res.status, code: (typeof e === "object" ? e?.codigo : undefined) ?? data?.code });
     }
     return data;
   } catch (err) {

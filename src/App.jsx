@@ -35,7 +35,7 @@ export default function App() {
           <a className="brand" href="#/veiculos" aria-label="AutoGiro, página inicial">AutoGiro</a>
           <nav aria-label="Principal" className="nav">
             <a href="#/veiculos" aria-current={cur("veiculos")}>Veículos</a>
-            <a href="#/operacoes" aria-current={cur("operacoes")}>Minhas operações</a>
+            <a href="#/operacoes" aria-current={cur("operacoes")}><span className="hide-sm">Minhas operações</span><span className="show-sm">Operações</span></a>
             <a href="#/credito" aria-current={cur("credito")}>Crédito</a>
           </nav>
         </div>

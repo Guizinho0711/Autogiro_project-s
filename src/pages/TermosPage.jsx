@@ -14,7 +14,7 @@ export default function TermosPage() {
   return (
     <main className="container">
       <article className="prose">
-        <header className="intro"><h1>Termos de <span className="grad">uso</span></h1><p>Última atualização: novembro de 2026.</p></header>
+        <header className="intro"><h1>Termos de uso</h1><p>Última atualização: novembro de 2026.</p></header>
         {SECOES.map(([t, txt], i) => (
           <section key={t} aria-labelledby={`t${i}`}><h2 id={`t${i}`} className="h2">{i + 1}. {t}</h2><p>{txt}</p></section>
         ))}

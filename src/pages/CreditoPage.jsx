@@ -21,7 +21,7 @@ export default function CreditoPage() {
   return (
     <main className="container">
       <section className="intro">
-        <h1>Análise de <span className="grad">crédito</span></h1>
+        <h1>Análise de crédito</h1>
         <p>Consulte uma proposta da esteira de crédito (score, decisão e operação) pelo número dela.</p>
       </section>
 
