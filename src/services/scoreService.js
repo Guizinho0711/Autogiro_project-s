@@ -38,6 +38,7 @@ export function montarRequisicao(f) {
 }
 
 // ---- Cálculo local com as mesmas regras do Score Engine v1.1.0 (PFScoreCalculatorStrategy) ----
+// As regras são do grupo do Score (viniciusgm25/Score-Engine). Esta é só uma reprodução para o modo demonstração.
 // Usado no modo demonstração (site publicado), quando o Score não está acessível.
 const comp = (nome, pontuacao, pesoPonderado, motivo) => ({ nome, pontuacao, pontuacaoMaxima: 1000, pesoPonderado, motivo });
 

@@ -1,7 +1,8 @@
 import { env } from "../config/env.js";
 import { http } from "./api/httpClient.js";
 
-/** Tabela de referência: os mesmos valores do seed do serviço de juros (modalidade VEICULOS). */
+/** Tabela de referência: os mesmos valores do seed do serviço de juros (modalidade VEICULOS),
+ *  do repositório gmelchert/calculo-juros-facul (outro grupo). Os valores são deles; aqui só são exibidos. */
 export const POLITICA_REFERENCIA = {
   modalidade: "VEICULOS",
   prazoMinMeses: 12,
